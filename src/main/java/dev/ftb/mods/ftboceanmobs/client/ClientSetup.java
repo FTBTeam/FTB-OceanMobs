@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftboceanmobs.client;
 
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
+import dev.ftb.mods.ftboceanmobs.client.render.RiftlingObserverRenderer;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -18,8 +19,9 @@ public class ClientSetup {
     }
 
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntityTypes.RIFTLING_OBSERVER.get(), RiftlingObserverRenderer::new);
+
         // TODO when we get some actual entity models...
-        event.registerEntityRenderer(ModEntityTypes.RIFTLING_OBSERVER.get(), DummyRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.ABYSSAL_WINGED.get(), DummyRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.CORROSIVE_CRAIG.get(), DummyRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.MOSSBACK_GOLIATH.get(), DummyRenderer::new);

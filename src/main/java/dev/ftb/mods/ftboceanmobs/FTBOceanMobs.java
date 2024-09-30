@@ -6,6 +6,7 @@ import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
 import dev.ftb.mods.ftboceanmobs.entity.RiftlingObserver;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModItems;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.Event;
@@ -50,6 +51,10 @@ public class FTBOceanMobs
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
 //        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+    }
+
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {

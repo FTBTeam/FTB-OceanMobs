@@ -39,8 +39,8 @@ public class ModEntityTypes {
 
     private static EntityType.Builder<RiftlingObserver> riftlingObserver() {
         return EntityType.Builder.of(RiftlingObserver::new, MobCategory.MONSTER)
-                .sized(0.6F, 1F)
-                .eyeHeight(0.36F)
+                .sized(0.8F, 1F)
+                .eyeHeight(0.72F)
                 .ridingOffset(0.04F)
                 .clientTrackingRange(8)
                 .updateInterval(2);
