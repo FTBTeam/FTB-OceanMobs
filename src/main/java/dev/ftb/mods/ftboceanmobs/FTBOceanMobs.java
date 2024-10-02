@@ -1,32 +1,26 @@
 package dev.ftb.mods.ftboceanmobs;
 
+import com.mojang.logging.LogUtils;
 import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
-import dev.ftb.mods.ftboceanmobs.client.DummyRenderer;
 import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
+import dev.ftb.mods.ftboceanmobs.entity.AbyssalWinged;
 import dev.ftb.mods.ftboceanmobs.entity.RiftlingObserver;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModItems;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.item.*;
-import net.neoforged.bus.api.Event;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(FTBOceanMobs.MODID)
@@ -59,7 +53,7 @@ public class FTBOceanMobs
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.RIFTLING_OBSERVER.get(), RiftlingObserver.createAttributes().build());
-        event.put(ModEntityTypes.ABYSSAL_WINGED.get(), Monster.createMonsterAttributes().build());
+        event.put(ModEntityTypes.ABYSSAL_WINGED.get(), AbyssalWinged.createAttributes().build());
         event.put(ModEntityTypes.CORROSIVE_CRAIG.get(), Monster.createMonsterAttributes().build());
         event.put(ModEntityTypes.MOSSBACK_GOLIATH.get(), Monster.createMonsterAttributes().build());
         event.put(ModEntityTypes.ABYSSAL_SLUDGE.get(), Monster.createMonsterAttributes().build());

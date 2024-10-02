@@ -1,6 +1,5 @@
 package dev.ftb.mods.ftboceanmobs.registry;
 
-import com.google.common.collect.ImmutableList;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -21,9 +20,9 @@ public class ModItems {
     private static final List<DeferredItem<Item>> SPAWN_EGGS = new ArrayList<>();
 
     public static final DeferredItem<Item> RIFTLING_OBSERVER_SPAWN_EGG
-            = registerSpawnEgg("riftling_observer", ModEntityTypes.RIFTLING_OBSERVER, 0xFFFF80FF, 0xFF20FF80);
+            = registerSpawnEgg("riftling_observer", ModEntityTypes.RIFTLING_OBSERVER, 0xFF63267E, 0xFFF770DC);
     public static final DeferredItem<Item> ABYSSAL_WINGED_SPAWN_EGG
-            = registerSpawnEgg("abyssal_winged", ModEntityTypes.ABYSSAL_WINGED, 0xFFFF80FF, 0xFF20FF80);
+            = registerSpawnEgg("abyssal_winged", ModEntityTypes.ABYSSAL_WINGED, 0xFF462479, 0xFF903DDB);
     public static final DeferredItem<Item> CORROSIVE_CRAIG_SPAWN_EGG
             = registerSpawnEgg("corrosive_craig", ModEntityTypes.CORROSIVE_CRAIG, 0xFFFF80FF, 0xFF20FF80);
     public static final DeferredItem<Item> MOSSBACK_GOLIATH_SPAWN_EGG

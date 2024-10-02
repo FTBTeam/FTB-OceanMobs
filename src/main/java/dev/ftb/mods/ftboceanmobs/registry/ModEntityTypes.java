@@ -39,7 +39,7 @@ public class ModEntityTypes {
 
     private static EntityType.Builder<RiftlingObserver> riftlingObserver() {
         return EntityType.Builder.of(RiftlingObserver::new, MobCategory.MONSTER)
-                .sized(0.8F, 1F)
+                .sized(0.78F, 1.1F)
                 .eyeHeight(0.72F)
                 .ridingOffset(0.04F)
                 .clientTrackingRange(8)
@@ -48,8 +48,8 @@ public class ModEntityTypes {
 
     private static EntityType.Builder<AbyssalWinged> abyssalWinged() {
         return EntityType.Builder.of(AbyssalWinged::new, MobCategory.MONSTER)
-                .sized(0.9F, 0.5F)
-                .eyeHeight(0.175F)
+                .sized(0.7F, 0.9F)
+                .eyeHeight(0.57F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
                 .clientTrackingRange(8);
