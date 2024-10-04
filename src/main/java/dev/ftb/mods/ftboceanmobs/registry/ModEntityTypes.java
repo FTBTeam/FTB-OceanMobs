@@ -57,8 +57,8 @@ public class ModEntityTypes {
 
     private static EntityType.Builder<CorrosiveCraig> corrosiveCraig() {
         return EntityType.Builder.of(CorrosiveCraig::new, MobCategory.MONSTER)
-                .sized(0.6F, 1.95F)
-                .eyeHeight(0.175F)
+                .sized(1.5F, 3.6F)
+                .eyeHeight(3.05F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
                 .clientTrackingRange(8);

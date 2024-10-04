@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
 import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
 import dev.ftb.mods.ftboceanmobs.entity.AbyssalWinged;
+import dev.ftb.mods.ftboceanmobs.entity.CorrosiveCraig;
 import dev.ftb.mods.ftboceanmobs.entity.RiftlingObserver;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModItems;
@@ -54,7 +55,7 @@ public class FTBOceanMobs
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.RIFTLING_OBSERVER.get(), RiftlingObserver.createAttributes().build());
         event.put(ModEntityTypes.ABYSSAL_WINGED.get(), AbyssalWinged.createAttributes().build());
-        event.put(ModEntityTypes.CORROSIVE_CRAIG.get(), Monster.createMonsterAttributes().build());
+        event.put(ModEntityTypes.CORROSIVE_CRAIG.get(), CorrosiveCraig.createAttributes().build());
         event.put(ModEntityTypes.MOSSBACK_GOLIATH.get(), Monster.createMonsterAttributes().build());
         event.put(ModEntityTypes.ABYSSAL_SLUDGE.get(), Monster.createMonsterAttributes().build());
         event.put(ModEntityTypes.SHADOW_BEAST.get(), Monster.createMonsterAttributes().build());

@@ -24,7 +24,7 @@ public class ModItems {
     public static final DeferredItem<Item> ABYSSAL_WINGED_SPAWN_EGG
             = registerSpawnEgg("abyssal_winged", ModEntityTypes.ABYSSAL_WINGED, 0xFF462479, 0xFF903DDB);
     public static final DeferredItem<Item> CORROSIVE_CRAIG_SPAWN_EGG
-            = registerSpawnEgg("corrosive_craig", ModEntityTypes.CORROSIVE_CRAIG, 0xFFFF80FF, 0xFF20FF80);
+            = registerSpawnEgg("corrosive_craig", ModEntityTypes.CORROSIVE_CRAIG, 0xFF332B56, 0xFFD23AFF);
     public static final DeferredItem<Item> MOSSBACK_GOLIATH_SPAWN_EGG
             = registerSpawnEgg("mossback_goliath", ModEntityTypes.MOSSBACK_GOLIATH, 0xFFFF80FF, 0xFF20FF80);
     public static final DeferredItem<Item> ABYSSAL_SLUDGE_SPAWN_EGG
