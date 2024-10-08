@@ -3,11 +3,10 @@ package dev.ftb.mods.ftboceanmobs;
 import com.mojang.logging.LogUtils;
 import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
 import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
-import dev.ftb.mods.ftboceanmobs.entity.AbyssalWinged;
-import dev.ftb.mods.ftboceanmobs.entity.CorrosiveCraig;
-import dev.ftb.mods.ftboceanmobs.entity.RiftlingObserver;
+import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModItems;
+import dev.ftb.mods.ftboceanmobs.registry.ModParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -56,8 +55,9 @@ public class FTBOceanMobs
         event.put(ModEntityTypes.RIFTLING_OBSERVER.get(), RiftlingObserver.createAttributes().build());
         event.put(ModEntityTypes.ABYSSAL_WINGED.get(), AbyssalWinged.createAttributes().build());
         event.put(ModEntityTypes.CORROSIVE_CRAIG.get(), CorrosiveCraig.createAttributes().build());
-        event.put(ModEntityTypes.MOSSBACK_GOLIATH.get(), Monster.createMonsterAttributes().build());
-        event.put(ModEntityTypes.ABYSSAL_SLUDGE.get(), Monster.createMonsterAttributes().build());
+        event.put(ModEntityTypes.MOSSBACK_GOLIATH.get(), MossbackGoliath.createAttributes().build());
+        event.put(ModEntityTypes.ABYSSAL_SLUDGE.get(), AbyssalSludge.createAttributes().build());
+        event.put(ModEntityTypes.SLUDGELING.get(), Sludgeling.createAttributes().build());
         event.put(ModEntityTypes.SHADOW_BEAST.get(), Monster.createMonsterAttributes().build());
         event.put(ModEntityTypes.RIFT_MINOTAUR.get(), Monster.createMonsterAttributes().build());
         event.put(ModEntityTypes.TENTACLED_HORROR.get(), Monster.createMonsterAttributes().build());
@@ -66,7 +66,9 @@ public class FTBOceanMobs
 
     private void registerAll(IEventBus modBus) {
         ModItems.ITEMS.register(modBus);
+        ModItems.CREATIVE_MODE_TABS.register(modBus);
         ModEntityTypes.ENTITY_TYPES.register(modBus);
+        ModParticleTypes.PARTICLES.register(modBus);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

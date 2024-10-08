@@ -1,11 +1,157 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.constant.DefaultAnimations;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class AbyssalSludge extends Monster {
+public class AbyssalSludge extends Monster implements GeoEntity {
+    private static final RawAnimation ANIM_ATTACK_SPLASH = RawAnimation.begin().thenPlay("attack.splash");
+
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    protected static final EntityDataAccessor<Boolean> DATA_SLUDGE_WARMUP = SynchedEntityData.defineId(AbyssalSludge.class, EntityDataSerializers.BOOLEAN);
+
     public AbyssalSludge(EntityType<? extends AbyssalSludge> entityType, Level level) {
         super(entityType, level);
+    }
+
+    private int sludgeWarmupTicks = 0;
+    private int nextSludgeTick = 0;
+
+    public static AttributeSupplier.Builder createAttributes() {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.23F)
+                .add(Attributes.MAX_HEALTH, 40.0)
+                .add(Attributes.ATTACK_DAMAGE, 3.0);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+
+        builder.define(DATA_SLUDGE_WARMUP, false);
+    }
+
+    @Override
+    protected void registerGoals() {
+        this.goalSelector.addGoal(1, new ThrowSludgeGoal(this));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0));
+
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(DefaultAnimations.genericWalkIdleController(this));
+        controllers.add(new AnimationController<>(this, "Attacking", 5, this::attackState));
+    }
+
+    private PlayState attackState(AnimationState<AbyssalSludge> state) {
+        state.setControllerSpeed(1f);
+        if (swinging) {
+            state.setControllerSpeed(2f);
+            return state.setAndContinue(DefaultAnimations.ATTACK_STRIKE);
+        } else if (getEntityData().get(DATA_SLUDGE_WARMUP)) {
+            return state.setAndContinue(ANIM_ATTACK_SPLASH);
+        }
+        return PlayState.STOP;
+    }
+
+    @Override
+    public int getCurrentSwingDuration() {
+        return entityData.get(DATA_SLUDGE_WARMUP) ? 24 : 15;
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
+    }
+
+    private static class ThrowSludgeGoal extends Goal {
+        private static final int SLUDGE_WARMUP_TICKS = 24;
+
+        private final TargetingConditions slimeCountTargeting = TargetingConditions.forNonCombat().range(16.0).ignoreLineOfSight().ignoreInvisibilityTesting();
+        private final AbyssalSludge abyssalSludge;
+
+        public ThrowSludgeGoal(AbyssalSludge abyssalSludge) {
+            this.abyssalSludge = abyssalSludge;
+        }
+
+        @Override
+        public boolean canUse() {
+            LivingEntity target = abyssalSludge.getTarget();
+            if (target != null && target.isAlive() && abyssalSludge.canAttack(target) && abyssalSludge.distanceToSqr(target) >= 16 && abyssalSludge.tickCount >= abyssalSludge.nextSludgeTick) {
+                int nSlimes = abyssalSludge.level()
+                        .getNearbyEntities(Slime.class, this.slimeCountTargeting, abyssalSludge, abyssalSludge.getBoundingBox().inflate(16.0))
+                        .size();
+                return nSlimes < 6;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            LivingEntity target = abyssalSludge.getTarget();
+            return abyssalSludge.sludgeWarmupTicks > 0 && target != null && target.isAlive() && abyssalSludge.canAttack(target);
+        }
+
+        @Override
+        public void start() {
+            abyssalSludge.getEntityData().set(DATA_SLUDGE_WARMUP, true);
+            abyssalSludge.sludgeWarmupTicks = adjustedTickDelay(SLUDGE_WARMUP_TICKS);
+            abyssalSludge.nextSludgeTick = abyssalSludge.tickCount + abyssalSludge.level().random.nextInt(40) + 20 + SLUDGE_WARMUP_TICKS;
+        }
+
+        @Override
+        public void stop() {
+            abyssalSludge.getEntityData().set(DATA_SLUDGE_WARMUP, false);
+        }
+
+        @Override
+        public void tick() {
+            // fire the sludgeling a few ticks before the animation ends; looks better that way
+            if (--abyssalSludge.sludgeWarmupTicks == 4 && abyssalSludge.getTarget() != null && abyssalSludge.level() instanceof ServerLevel serverLevel) {
+                abyssalSludge.lookControl.setLookAt(abyssalSludge.getTarget());
+                Vec3 look = abyssalSludge.getLookAngle().normalize();
+                Vec3 pos = abyssalSludge.getEyePosition().add(look.scale(0.5));
+                Sludgeling sludgeling = ModEntityTypes.SLUDGELING.get().create(serverLevel);
+                if (sludgeling != null) {
+                    sludgeling.setDeltaMovement(look.scale(0.5));
+                    sludgeling.moveTo(pos, 0.0F, 0.0F);
+                    sludgeling.setTarget(abyssalSludge.getTarget());
+                    sludgeling.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(abyssalSludge.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
+                    sludgeling.setSize(2, true);
+                    serverLevel.addFreshEntityWithPassengers(sludgeling);
+                    serverLevel.gameEvent(GameEvent.ENTITY_PLACE, BlockPos.containing(pos), GameEvent.Context.of(abyssalSludge));
+                }
+            }
+        }
     }
 }

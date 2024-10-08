@@ -25,6 +25,10 @@ public class ModLangProvider extends LanguageProvider {
         addEntityAndEgg(ModEntityTypes.RIFT_MINOTAUR.get(), ModItems.RIFT_MINOTAUR_SPAWN_EGG.get(), "Rift Minotaur");
         addEntityAndEgg(ModEntityTypes.TENTACLED_HORROR.get(), ModItems.TENTACLED_HORROR_SPAWN_EGG.get(), "Tentacled Horror");
         addEntityAndEgg(ModEntityTypes.RIFT_DEMON.get(), ModItems.RIFT_DEMON_SPAWN_EGG.get(), "Rift Demon");
+        addEntityAndEgg(ModEntityTypes.SLUDGELING.get(), ModItems.SLUDGELING_SPAWN_EGG.get(), "Sludgeling");
+
+        addItem(ModItems.SLUDGE_BALL, "Sludge Ball");
+        add("ftboceanmobs.itemGroup.tab", "FTB Ocean Mobs");
     }
 
     private void addEntityAndEgg(EntityType<? extends Entity> entityType, Item spawnEgg, String translation) {

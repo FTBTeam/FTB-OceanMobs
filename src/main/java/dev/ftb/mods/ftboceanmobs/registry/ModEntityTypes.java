@@ -32,6 +32,8 @@ public class ModEntityTypes {
             = register("tentacled_horror", ModEntityTypes::tentacledHorror);
     public static final Supplier<EntityType<RiftDemon>> RIFT_DEMON
             = register("rift_demon", ModEntityTypes::riftDemon);
+    public static final Supplier<EntityType<Sludgeling>> SLUDGELING
+            = register("sludgeling", ModEntityTypes::sludgeling);
 
     private static <E extends Entity> Supplier<EntityType<E>> register(final String name, final Supplier<EntityType.Builder<E>> sup) {
         return ENTITY_TYPES.register(name, () -> sup.get().build(name));
@@ -42,7 +44,7 @@ public class ModEntityTypes {
                 .sized(0.78F, 1.1F)
                 .eyeHeight(0.72F)
                 .ridingOffset(0.04F)
-                .clientTrackingRange(8)
+                .clientTrackingRange(10)
                 .updateInterval(2);
     }
 
@@ -52,7 +54,7 @@ public class ModEntityTypes {
                 .eyeHeight(0.57F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
-                .clientTrackingRange(8);
+                .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<CorrosiveCraig> corrosiveCraig() {
@@ -61,25 +63,25 @@ public class ModEntityTypes {
                 .eyeHeight(3.05F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
-                .clientTrackingRange(8);
+                .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<MossbackGoliath> mossbackGoliath() {
         return EntityType.Builder.of(MossbackGoliath::new, MobCategory.MONSTER)
-                .sized(0.6F, 1.95F)
-                .eyeHeight(0.175F)
+                .sized(1.5F, 3.6F)
+                .eyeHeight(3.05F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
-                .clientTrackingRange(8);
+                .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<AbyssalSludge> abyssalSludge() {
         return EntityType.Builder.of(AbyssalSludge::new, MobCategory.MONSTER)
-                .sized(0.6F, 1.95F)
-                .eyeHeight(0.175F)
+                .sized(0.78F, 1.95F)
+                .eyeHeight(1.5F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
-                .clientTrackingRange(8);
+                .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<ShadowBeast> shadowBeast() {
@@ -88,7 +90,7 @@ public class ModEntityTypes {
                 .eyeHeight(0.175F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
-                .clientTrackingRange(8);
+                .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<RiftMinotaur> riftMinotaur() {
@@ -97,7 +99,7 @@ public class ModEntityTypes {
                 .eyeHeight(0.175F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
-                .clientTrackingRange(8);
+                .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<RiftDemon> riftDemon() {
@@ -106,7 +108,7 @@ public class ModEntityTypes {
                 .eyeHeight(0.175F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
-                .clientTrackingRange(8);
+                .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<TentacledHorror> tentacledHorror() {
@@ -115,6 +117,13 @@ public class ModEntityTypes {
                 .eyeHeight(0.175F)
                 .passengerAttachments(0.3375F)
                 .ridingOffset(-0.125F)
-                .clientTrackingRange(8);
+                .clientTrackingRange(10);
+    }
+
+    private static EntityType.Builder<Sludgeling> sludgeling() {
+        return EntityType.Builder.of(Sludgeling::new, MobCategory.MONSTER)
+                .sized(0.52F, 0.52F)
+                .eyeHeight(0.325F)
+                .clientTrackingRange(10);
     }
 }

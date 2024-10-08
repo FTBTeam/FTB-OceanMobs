@@ -9,6 +9,7 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 public class ModItemModelProvider extends ItemModelProvider {
     private static final ResourceLocation TEMPLATE_SPAWN_EGG = ResourceLocation.parse("item/template_spawn_egg");
+    private static final ResourceLocation GENERATED = ResourceLocation.parse("item/generated");
 
     public ModItemModelProvider(DataGenerator generator, ExistingFileHelper existingFileHelper) {
         super(generator.getPackOutput(), FTBOceanMobs.MODID, existingFileHelper);
@@ -24,5 +25,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         ModItems.getSpawnEggs().forEach(egg -> {
             withExistingParent(egg.getId().getPath(), TEMPLATE_SPAWN_EGG);
         });
+
+        withExistingParent("sludge_ball", GENERATED).texture("layer0", "item/sludge_ball");
     }
 }
