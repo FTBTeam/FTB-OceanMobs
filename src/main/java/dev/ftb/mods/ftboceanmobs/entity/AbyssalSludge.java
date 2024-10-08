@@ -111,7 +111,7 @@ public class AbyssalSludge extends Monster implements GeoEntity {
                 int nSlimes = abyssalSludge.level()
                         .getNearbyEntities(Slime.class, this.slimeCountTargeting, abyssalSludge, abyssalSludge.getBoundingBox().inflate(16.0))
                         .size();
-                return nSlimes < 6;
+                return nSlimes < 12;
             }
             return false;
         }
@@ -143,7 +143,7 @@ public class AbyssalSludge extends Monster implements GeoEntity {
                 Vec3 pos = abyssalSludge.getEyePosition().add(look.scale(0.5));
                 Sludgeling sludgeling = ModEntityTypes.SLUDGELING.get().create(serverLevel);
                 if (sludgeling != null) {
-                    sludgeling.setDeltaMovement(look.scale(0.5));
+                    sludgeling.setDeltaMovement(look.scale(0.7));
                     sludgeling.moveTo(pos, 0.0F, 0.0F);
                     sludgeling.setTarget(abyssalSludge.getTarget());
                     sludgeling.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(abyssalSludge.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
