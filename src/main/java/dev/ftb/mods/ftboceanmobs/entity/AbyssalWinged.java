@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -10,6 +11,7 @@ import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
@@ -20,6 +22,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
@@ -41,11 +44,14 @@ public class AbyssalWinged extends Monster implements Enemy, GeoEntity {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MAX_HEALTH, 75)
                 .add(Attributes.FLYING_SPEED, 0.6F)
-                .add(Attributes.MOVEMENT_SPEED, 0.4F)
-                .add(Attributes.ATTACK_KNOCKBACK, 1.5F)
-                .add(Attributes.ATTACK_DAMAGE, /*3.0*/ 0.1);
+                .add(Attributes.MOVEMENT_SPEED, 0.23F)
+                .add(Attributes.ATTACK_KNOCKBACK, 2.5F)
+                .add(Attributes.ARMOR, 16F)
+                .add(Attributes.ARMOR_TOUGHNESS, 6F)
+                .add(Attributes.FOLLOW_RANGE, 32F)
+                .add(Attributes.ATTACK_DAMAGE, 9.0);
     }
 
     @Override
@@ -59,11 +65,18 @@ public class AbyssalWinged extends Monster implements Enemy, GeoEntity {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.25f, true));
+        goalSelector.addGoal(1, new DelayedMeleeAttackGoal(this, 3f, true, 15));
         goalSelector.addGoal(2, new AbyssalWingedWanderGoal(this));
         goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8F));
 
-        targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+    }
+
+    @Override
+    protected AABB getAttackBoundingBox() {
+        // long arms...
+        return super.getAttackBoundingBox().inflate(1.2);
     }
 
     @Override

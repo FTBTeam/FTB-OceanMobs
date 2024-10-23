@@ -45,9 +45,12 @@ public class MossbackGoliath extends Monster implements GeoEntity {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MOVEMENT_SPEED, 0.23F)
-                .add(Attributes.MAX_HEALTH, 60.0)
-                .add(Attributes.ATTACK_DAMAGE, 5.0);
+                .add(Attributes.MOVEMENT_SPEED, 0.28F)
+                .add(Attributes.MAX_HEALTH, 50.0)
+                .add(Attributes.ARMOR, 8F)
+                .add(Attributes.ARMOR_TOUGHNESS, 6F)
+                .add(Attributes.FOLLOW_RANGE, 36F)
+                .add(Attributes.ATTACK_DAMAGE, 0.0);
     }
 
     public MossbackGoliath(EntityType<? extends MossbackGoliath> entityType, Level level) {
@@ -65,7 +68,6 @@ public class MossbackGoliath extends Monster implements GeoEntity {
 
     @Override
     protected void registerGoals() {
-//        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));
         this.goalSelector.addGoal(1, new ShardAttackGoal(this));
         this.goalSelector.addGoal(2, new MoveTowardsTargetGoal(this, 1.3, 32.0F));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -153,17 +155,6 @@ public class MossbackGoliath extends Monster implements GeoEntity {
             }
     }
 
-    private static class MossbackWanderGoal extends WaterAvoidingRandomStrollGoal {
-        public MossbackWanderGoal(PathfinderMob mob, double speedModifier) {
-            super(mob, speedModifier);
-        }
-
-        @Override
-        public boolean canUse() {
-            return mob instanceof MossbackGoliath && !mob.getEntityData().get(DATA_SHARD_WARMUP) && super.canUse();
-        }
-    }
-
     private static class ShardAttackGoal extends Goal {
         private static final int SHARD_WARMUP_TICKS = 35;
 
@@ -181,7 +172,7 @@ public class MossbackGoliath extends Monster implements GeoEntity {
             return target != null && target.isAlive()
                     && mossback.canAttack(target)
                     && mossback.tickCount >= mossback.nextShardTick
-                    && mossback.distanceToSqr(target) < 144
+                    && mossback.distanceToSqr(target) < 400
                     && mossback.getSensing().hasLineOfSight(target);
         }
 
@@ -215,7 +206,7 @@ public class MossbackGoliath extends Monster implements GeoEntity {
             if (target != null && mossback.level() instanceof ServerLevel serverLevel && mossback.getSensing().hasLineOfSight(target)) {
                 mossback.lookControl.setLookAt(target, 45f, 45f);
                 --mossback.shardWarmupTicks;
-                if (mossback.shardWarmupTicks == 6) {
+                if (mossback.shardWarmupTicks == 8) {
                     mossback.entityData.set(DATA_SHARD_FIRING, true);
                     mossback.firingCooldown = 4;
                 } else if (mossback.shardWarmupTicks == 0) {
@@ -224,7 +215,7 @@ public class MossbackGoliath extends Monster implements GeoEntity {
                         target.getOffhandItem().hurtAndBreak(1, target, EquipmentSlot.OFFHAND);
                     } else {
                         target.hurt(serverLevel.damageSources().mobAttack(mossback), 3);
-                        target.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 40));
+                        target.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 40 + mossback.getRandom().nextInt(40)));
                     }
                 }
             }

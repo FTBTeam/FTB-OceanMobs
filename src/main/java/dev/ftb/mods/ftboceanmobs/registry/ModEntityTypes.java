@@ -42,54 +42,43 @@ public class ModEntityTypes {
     private static EntityType.Builder<RiftlingObserver> riftlingObserver() {
         return EntityType.Builder.of(RiftlingObserver::new, MobCategory.MONSTER)
                 .sized(0.78F, 1.1F)
-                .eyeHeight(0.72F)
-                .ridingOffset(0.04F)
+                .eyeHeight(0.82F)
                 .clientTrackingRange(10)
                 .updateInterval(2);
     }
 
     private static EntityType.Builder<AbyssalWinged> abyssalWinged() {
         return EntityType.Builder.of(AbyssalWinged::new, MobCategory.MONSTER)
-                .sized(0.7F, 0.9F)
-                .eyeHeight(0.57F)
-                .passengerAttachments(0.3375F)
-                .ridingOffset(-0.125F)
+                .sized(2.3F, 3.0F)
+                .eyeHeight(2.25F)
                 .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<CorrosiveCraig> corrosiveCraig() {
         return EntityType.Builder.of(CorrosiveCraig::new, MobCategory.MONSTER)
-                .sized(1.5F, 3.6F)
-                .eyeHeight(3.05F)
-                .passengerAttachments(0.3375F)
-                .ridingOffset(-0.125F)
+                .sized(1.55F, 3.2F)
+                .eyeHeight(2.85F)
                 .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<MossbackGoliath> mossbackGoliath() {
         return EntityType.Builder.of(MossbackGoliath::new, MobCategory.MONSTER)
-                .sized(1.5F, 3.6F)
-                .eyeHeight(3.05F)
-                .passengerAttachments(0.3375F)
-                .ridingOffset(-0.125F)
+                .sized(1.05F, 2.5F)
+                .eyeHeight(2.03F)
                 .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<AbyssalSludge> abyssalSludge() {
         return EntityType.Builder.of(AbyssalSludge::new, MobCategory.MONSTER)
-                .sized(0.78F, 1.95F)
-                .eyeHeight(1.5F)
-                .passengerAttachments(0.3375F)
-                .ridingOffset(-0.125F)
+                .sized(1.4F, 2.9F)
+                .eyeHeight(2.25F)
                 .clientTrackingRange(10);
     }
 
     private static EntityType.Builder<ShadowBeast> shadowBeast() {
         return EntityType.Builder.of(ShadowBeast::new, MobCategory.MONSTER)
-                .sized(0.6F, 1.95F)
-                .eyeHeight(0.175F)
-                .passengerAttachments(0.3375F)
-                .ridingOffset(-0.125F)
+                .sized(0.75F, 1.25F)
+                .eyeHeight(1.08F)
                 .clientTrackingRange(10);
     }
 

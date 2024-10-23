@@ -59,8 +59,10 @@ public class RiftlingObserver extends Monster implements GeoEntity {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MOVEMENT_SPEED, 0.23F)
-                .add(Attributes.ATTACK_DAMAGE, 3.0);
+                .add(Attributes.MAX_HEALTH, 14.0)
+                .add(Attributes.FOLLOW_RANGE, 42.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.19F)
+                .add(Attributes.ATTACK_DAMAGE, 2.0);
     }
 
     @Override

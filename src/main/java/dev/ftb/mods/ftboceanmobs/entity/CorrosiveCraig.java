@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -13,7 +14,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -52,9 +52,12 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MOVEMENT_SPEED, 0.23F)
-                .add(Attributes.MAX_HEALTH, 100.0)
-                .add(Attributes.ATTACK_DAMAGE, 5.0);
+                .add(Attributes.MOVEMENT_SPEED, 0.15F)
+                .add(Attributes.MAX_HEALTH, 120.0)
+                .add(Attributes.ARMOR, 15F)
+                .add(Attributes.ARMOR_TOUGHNESS, 10F)
+                .add(Attributes.FOLLOW_RANGE, 36F)
+                .add(Attributes.ATTACK_DAMAGE, 15.0);
     }
 
     @Override
@@ -76,7 +79,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
     @Override
     protected AABB getAttackBoundingBox() {
         // long arms...
-        return super.getAttackBoundingBox().inflate(1.5);
+        return super.getAttackBoundingBox().inflate(1.7);
     }
 
     @Override
@@ -142,7 +145,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
     public boolean doHurtTarget(Entity entity) {
         if (super.doHurtTarget(entity)) {
             if (entity.getRandom().nextBoolean()) {
-                entity.igniteForTicks(20 + entity.getRandom().nextInt(20));
+                entity.igniteForTicks(40 + entity.getRandom().nextInt(40));
             }
             return true;
         }
@@ -154,9 +157,9 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
         return cache;
     }
 
-    class CraigAttackGoal extends MeleeAttackGoal {
+    class CraigAttackGoal extends DelayedMeleeAttackGoal {
         public CraigAttackGoal(CorrosiveCraig mob, double speedModifier, boolean followingTargetEvenIfNotSeen) {
-            super(mob, speedModifier, followingTargetEvenIfNotSeen);
+            super(mob, speedModifier, followingTargetEvenIfNotSeen, 20);
         }
 
         @Override

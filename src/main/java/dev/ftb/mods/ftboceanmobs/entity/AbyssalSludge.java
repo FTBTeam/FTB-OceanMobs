@@ -6,6 +6,9 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
@@ -44,8 +47,11 @@ public class AbyssalSludge extends Monster implements GeoEntity {
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.23F)
-                .add(Attributes.MAX_HEALTH, 40.0)
-                .add(Attributes.ATTACK_DAMAGE, 3.0);
+                .add(Attributes.MAX_HEALTH, 75.0)
+                .add(Attributes.ARMOR, 8F)
+                .add(Attributes.ARMOR_TOUGHNESS, 6F)
+                .add(Attributes.FOLLOW_RANGE, 42F)
+                .add(Attributes.ATTACK_DAMAGE, 9.0);
     }
 
     @Override
@@ -90,6 +96,15 @@ public class AbyssalSludge extends Monster implements GeoEntity {
     }
 
     @Override
+    public boolean doHurtTarget(Entity entity) {
+        if (entity instanceof LivingEntity livingEntity && super.doHurtTarget(entity)) {
+            livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 30 + entity.getRandom().nextInt(40), 3));
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
     }
@@ -107,7 +122,7 @@ public class AbyssalSludge extends Monster implements GeoEntity {
         @Override
         public boolean canUse() {
             LivingEntity target = abyssalSludge.getTarget();
-            if (target != null && target.isAlive() && abyssalSludge.canAttack(target) && abyssalSludge.distanceToSqr(target) >= 16 && abyssalSludge.tickCount >= abyssalSludge.nextSludgeTick) {
+            if (target != null && target.isAlive() && abyssalSludge.canAttack(target) && abyssalSludge.distanceToSqr(target) >= 25 && abyssalSludge.tickCount >= abyssalSludge.nextSludgeTick) {
                 int nSlimes = abyssalSludge.level()
                         .getNearbyEntities(Slime.class, this.slimeCountTargeting, abyssalSludge, abyssalSludge.getBoundingBox().inflate(16.0))
                         .size();
@@ -126,7 +141,7 @@ public class AbyssalSludge extends Monster implements GeoEntity {
         public void start() {
             abyssalSludge.getEntityData().set(DATA_SLUDGE_WARMUP, true);
             abyssalSludge.sludgeWarmupTicks = adjustedTickDelay(SLUDGE_WARMUP_TICKS);
-            abyssalSludge.nextSludgeTick = abyssalSludge.tickCount + abyssalSludge.level().random.nextInt(40) + 20 + SLUDGE_WARMUP_TICKS;
+            abyssalSludge.nextSludgeTick = abyssalSludge.tickCount + abyssalSludge.level().random.nextInt(40) + 40 + SLUDGE_WARMUP_TICKS;
         }
 
         @Override
@@ -143,11 +158,13 @@ public class AbyssalSludge extends Monster implements GeoEntity {
                 Vec3 pos = abyssalSludge.getEyePosition().add(look.scale(0.5));
                 Sludgeling sludgeling = ModEntityTypes.SLUDGELING.get().create(serverLevel);
                 if (sludgeling != null) {
-                    sludgeling.setDeltaMovement(look.scale(0.7));
+                    Vec3 vec = abyssalSludge.getTarget().position().subtract(abyssalSludge.position());
+                    sludgeling.setDeltaMovement(vec.scale(0.125));
                     sludgeling.moveTo(pos, 0.0F, 0.0F);
                     sludgeling.setTarget(abyssalSludge.getTarget());
                     sludgeling.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(abyssalSludge.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
-                    sludgeling.setSize(2, true);
+                    sludgeling.setSize(2, false);
+                    sludgeling.setHealth(sludgeling.getMaxHealth());
                     serverLevel.addFreshEntityWithPassengers(sludgeling);
                     serverLevel.gameEvent(GameEvent.ENTITY_PLACE, BlockPos.containing(pos), GameEvent.Context.of(abyssalSludge));
                 }
