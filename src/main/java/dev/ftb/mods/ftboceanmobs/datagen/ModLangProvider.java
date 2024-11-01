@@ -29,6 +29,7 @@ public class ModLangProvider extends LanguageProvider {
 
         addItem(ModItems.SLUDGE_BALL, "Sludge Ball");
         add("ftboceanmobs.itemGroup.tab", "FTB Ocean Mobs");
+        add("ftboceanmobs.subtitles.minotaur_grunts", "Minotaur grunts");
     }
 
     private void addEntityAndEgg(EntityType<? extends Entity> entityType, Item spawnEgg, String translation) {

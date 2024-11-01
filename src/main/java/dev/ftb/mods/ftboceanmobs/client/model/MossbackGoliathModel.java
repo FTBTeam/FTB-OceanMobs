@@ -6,9 +6,9 @@ import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 
 public class MossbackGoliathModel extends DefaultedEntityGeoModel<MossbackGoliath> {
-    private static final ResourceLocation MOSSBACK_GOLIATH = FTBOceanMobs.id("mossback_goliath");
+    private static final ResourceLocation ID = FTBOceanMobs.id("mossback_goliath");
 
     public MossbackGoliathModel() {
-        super(MOSSBACK_GOLIATH, true);
+        super(ID, true);
     }
 }

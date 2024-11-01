@@ -53,7 +53,7 @@ public class ModItems {
     public static final DeferredItem<Item> SHADOW_BEAST_SPAWN_EGG
             = registerSpawnEgg("shadow_beast", ModEntityTypes.SHADOW_BEAST, 0xFF241F3B, 0xFFE451FF);
     public static final DeferredItem<Item> RIFT_MINOTAUR_SPAWN_EGG
-            = registerSpawnEgg("rift_minotaur", ModEntityTypes.RIFT_MINOTAUR, 0xFFFF80FF, 0xFF20FF80);
+            = registerSpawnEgg("rift_minotaur", ModEntityTypes.RIFT_MINOTAUR, 0xFF520E87, 0xFFFF57FF);
     public static final DeferredItem<Item> TENTACLED_HORROR_SPAWN_EGG
             = registerSpawnEgg("tentacled_horror", ModEntityTypes.TENTACLED_HORROR, 0xFFFF80FF, 0xFF20FF80);
     public static final DeferredItem<Item> RIFT_DEMON_SPAWN_EGG

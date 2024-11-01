@@ -1,10 +1,8 @@
 package dev.ftb.mods.ftboceanmobs.client;
 
-import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.client.particle.ItemParticleProvider;
 import dev.ftb.mods.ftboceanmobs.client.particle.MossbackShardParticleProvider;
 import dev.ftb.mods.ftboceanmobs.client.render.*;
-import dev.ftb.mods.ftboceanmobs.entity.ShadowBeast;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModItems;
 import dev.ftb.mods.ftboceanmobs.registry.ModParticleTypes;
@@ -22,7 +20,6 @@ public class ClientSetup {
     }
 
     public static void onClientSetup(FMLClientSetupEvent event) {
-        FTBOceanMobs.LOGGER.info("HELLO FROM CLIENT SETUP");
     }
 
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -32,11 +29,12 @@ public class ClientSetup {
         event.registerEntityRenderer(ModEntityTypes.MOSSBACK_GOLIATH.get(), ctx -> MossbackGoliathRenderer.scaled(ctx, 0.75f));
         event.registerEntityRenderer(ModEntityTypes.ABYSSAL_SLUDGE.get(), ctx -> AbyssalSludgeRenderer.scaled(ctx,1f));
         event.registerEntityRenderer(ModEntityTypes.SHADOW_BEAST.get(), ctx -> ShadowBeastRenderer.scaled(ctx,0.25f));
+        event.registerEntityRenderer(ModEntityTypes.RIFT_MINOTAUR.get(), ctx -> RiftMinotaurRenderer.scaled(ctx,1.17f));
 
         event.registerEntityRenderer(ModEntityTypes.SLUDGELING.get(), SludgelingRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.TUMBLING_BLOCK.get(), TumblingBlockRenderer::new);
 
         // TODO when we get some actual entity models...
-        event.registerEntityRenderer(ModEntityTypes.RIFT_MINOTAUR.get(), DummyRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.TENTACLED_HORROR.get(), DummyRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.RIFT_DEMON.get(), DummyRenderer::new);
     }

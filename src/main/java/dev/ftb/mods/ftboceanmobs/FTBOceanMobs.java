@@ -7,6 +7,7 @@ import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModItems;
 import dev.ftb.mods.ftboceanmobs.registry.ModParticleTypes;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -59,7 +60,7 @@ public class FTBOceanMobs
         event.put(ModEntityTypes.ABYSSAL_SLUDGE.get(), AbyssalSludge.createAttributes().build());
         event.put(ModEntityTypes.SLUDGELING.get(), Sludgeling.createAttributes().build());
         event.put(ModEntityTypes.SHADOW_BEAST.get(), ShadowBeast.createAttributes().build());
-        event.put(ModEntityTypes.RIFT_MINOTAUR.get(), Monster.createMonsterAttributes().build());
+        event.put(ModEntityTypes.RIFT_MINOTAUR.get(), RiftMinotaur.createAttributes().build());
         event.put(ModEntityTypes.TENTACLED_HORROR.get(), Monster.createMonsterAttributes().build());
         event.put(ModEntityTypes.RIFT_DEMON.get(), Monster.createMonsterAttributes().build());
     }
@@ -69,6 +70,7 @@ public class FTBOceanMobs
         ModItems.CREATIVE_MODE_TABS.register(modBus);
         ModEntityTypes.ENTITY_TYPES.register(modBus);
         ModParticleTypes.PARTICLES.register(modBus);
+        ModSounds.SOUNDS.register(modBus);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

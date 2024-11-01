@@ -6,9 +6,9 @@ import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 
 public class AbyssalSludgeModel extends DefaultedEntityGeoModel<AbyssalSludge> {
-    private static final ResourceLocation ABYSSAL_SLUDGE = FTBOceanMobs.id("abyssal_sludge");
+    private static final ResourceLocation ID = FTBOceanMobs.id("abyssal_sludge");
 
     public AbyssalSludgeModel() {
-        super(ABYSSAL_SLUDGE, true);
+        super(ID, true);
     }
 }

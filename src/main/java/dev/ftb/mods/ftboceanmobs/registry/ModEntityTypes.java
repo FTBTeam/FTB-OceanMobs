@@ -34,6 +34,8 @@ public class ModEntityTypes {
             = register("rift_demon", ModEntityTypes::riftDemon);
     public static final Supplier<EntityType<Sludgeling>> SLUDGELING
             = register("sludgeling", ModEntityTypes::sludgeling);
+    public static final Supplier<EntityType<TumblingBlockEntity>> TUMBLING_BLOCK
+            = register("tumbling_block", ModEntityTypes::tumblingBlock);
 
     private static <E extends Entity> Supplier<EntityType<E>> register(final String name, final Supplier<EntityType.Builder<E>> sup) {
         return ENTITY_TYPES.register(name, () -> sup.get().build(name));
@@ -84,10 +86,8 @@ public class ModEntityTypes {
 
     private static EntityType.Builder<RiftMinotaur> riftMinotaur() {
         return EntityType.Builder.of(RiftMinotaur::new, MobCategory.MONSTER)
-                .sized(0.6F, 1.95F)
-                .eyeHeight(0.175F)
-                .passengerAttachments(0.3375F)
-                .ridingOffset(-0.125F)
+                .sized(1.6F, 3.4F)
+                .eyeHeight(3.1F)
                 .clientTrackingRange(10);
     }
 
@@ -114,5 +114,14 @@ public class ModEntityTypes {
                 .sized(0.52F, 0.52F)
                 .eyeHeight(0.325F)
                 .clientTrackingRange(10);
+    }
+
+    private static EntityType.Builder<TumblingBlockEntity> tumblingBlock() {
+        return EntityType.Builder.<TumblingBlockEntity>of(TumblingBlockEntity::new, MobCategory.MISC)
+                .sized(0.5f, 0.5f)
+                .fireImmune()
+                .setTrackingRange(4)
+                .setUpdateInterval(20)
+                .setShouldReceiveVelocityUpdates(true);
     }
 }

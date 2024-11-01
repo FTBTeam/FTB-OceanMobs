@@ -23,6 +23,11 @@ public class DelayedMeleeAttackGoal extends MeleeAttackGoal {
     }
 
     @Override
+    public boolean canContinueToUse() {
+        return super.canContinueToUse() || !queuedAttacks.isEmpty();
+    }
+
+    @Override
     public void tick() {
         super.tick();
 

@@ -6,9 +6,9 @@ import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 
 public class ShadowBeastModel extends DefaultedEntityGeoModel<ShadowBeast> {
-    private static final ResourceLocation SHADOWBEAST = FTBOceanMobs.id("shadowbeast");
+    private static final ResourceLocation ID = FTBOceanMobs.id("shadowbeast");
 
     public ShadowBeastModel() {
-        super(SHADOWBEAST, true);
+        super(ID, true);
     }
 }

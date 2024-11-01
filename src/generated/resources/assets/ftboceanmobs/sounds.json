@@ -1,0 +1,8 @@
+{
+  "minotaur_idle": {
+    "sounds": [
+      "ftboceanmobs:minotaur_idle"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.minotaur_grunt"
+  }
+}
