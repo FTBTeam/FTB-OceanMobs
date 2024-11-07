@@ -16,4 +16,6 @@ public class ModParticleTypes {
             = PARTICLES.register("sludge", () -> new SimpleParticleType(false));
     public static final Supplier<SimpleParticleType> MOSSBACK_SHARD
             = PARTICLES.register("mossback_shard", () -> new SimpleParticleType(false));
+    public static final Supplier<SimpleParticleType> HORROR_INK
+            = PARTICLES.register("horror_ink", () -> new SimpleParticleType(false));
 }

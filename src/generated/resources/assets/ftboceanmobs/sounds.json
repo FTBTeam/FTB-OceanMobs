@@ -4,5 +4,11 @@
       "ftboceanmobs:minotaur_idle"
     ],
     "subtitle": "ftboceanmobs.subtitle.minotaur_grunt"
+  },
+  "tentacle_squish": {
+    "sounds": [
+      "ftboceanmobs:tentacle_squish"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.squish"
   }
 }

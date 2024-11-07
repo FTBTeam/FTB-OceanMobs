@@ -17,5 +17,9 @@ public class ModSoundProvider extends SoundDefinitionsProvider {
         add(ModSounds.MINOTAUR_IDLE, SoundDefinition.definition()
                 .with(sound(FTBOceanMobs.id("minotaur_idle")))
                 .subtitle("ftboceanmobs.subtitle.minotaur_grunt"));
+
+        add(ModSounds.TENTACLE_SQUISH, SoundDefinition.definition()
+                .with(sound(FTBOceanMobs.id("tentacle_squish")))
+                .subtitle("ftboceanmobs.subtitle.squish"));
     }
 }

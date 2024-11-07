@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import dev.ftb.mods.ftboceanmobs.registry.ModParticleTypes;
+import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -141,18 +142,13 @@ public class MossbackGoliath extends Monster implements GeoEntity {
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
 
-        if (level().isClientSide)
+        if (level().isClientSide) {
             if (DATA_SHARD_FIRING.equals(key) && entityData.get(DATA_SHARD_FIRING) && getSyncedTarget() != null) {
-                // play particles
-                Vec3 start = getEyePosition().add(getLookAngle().normalize().scale(0.5));
-                Vec3 vel = getSyncedTarget().getEyePosition().subtract(start).normalize();
-                for (int i = 0; i < 15; i++) {
-                    Vec3 vel2 = vel.add(random.nextDouble() * 0.4 - 0.2, random.nextDouble() * 0.4 - 0.2, random.nextDouble() * 0.4 - 0.2);
-                    level().addParticle(ModParticleTypes.MOSSBACK_SHARD.get(), start.x, start.y, start.z, vel2.x, vel2.y, vel2.z);
-                }
+                MiscUtil.doParticleSpray(this, getSyncedTarget(), ModParticleTypes.MOSSBACK_SHARD.get(), 15);
             } else if (DATA_ATTACK_TARGET.equals(key)) {
                 clientSideCachedAttackTarget = null;
             }
+        }
     }
 
     private static class ShardAttackGoal extends Goal {

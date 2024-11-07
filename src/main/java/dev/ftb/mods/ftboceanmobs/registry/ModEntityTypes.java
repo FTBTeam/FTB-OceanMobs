@@ -6,6 +6,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.function.Supplier;
@@ -91,21 +92,17 @@ public class ModEntityTypes {
                 .clientTrackingRange(10);
     }
 
+    private static EntityType.Builder<TentacledHorror> tentacledHorror() {
+        return EntityType.Builder.of(TentacledHorror::new, MobCategory.MONSTER)
+                .sized(2.5F, 9F)
+                .eyeHeight(7.1F)
+                .clientTrackingRange(10);
+    }
+
     private static EntityType.Builder<RiftDemon> riftDemon() {
         return EntityType.Builder.of(RiftDemon::new, MobCategory.MONSTER)
                 .sized(0.6F, 1.95F)
                 .eyeHeight(0.175F)
-                .passengerAttachments(0.3375F)
-                .ridingOffset(-0.125F)
-                .clientTrackingRange(10);
-    }
-
-    private static EntityType.Builder<TentacledHorror> tentacledHorror() {
-        return EntityType.Builder.of(TentacledHorror::new, MobCategory.MONSTER)
-                .sized(0.6F, 1.95F)
-                .eyeHeight(0.175F)
-                .passengerAttachments(0.3375F)
-                .ridingOffset(-0.125F)
                 .clientTrackingRange(10);
     }
 

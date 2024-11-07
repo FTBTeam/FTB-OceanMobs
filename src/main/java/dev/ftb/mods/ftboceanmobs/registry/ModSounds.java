@@ -10,6 +10,7 @@ public class ModSounds {
     public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, FTBOceanMobs.MODID);
 
     public static final DeferredHolder<SoundEvent, SoundEvent> MINOTAUR_IDLE = register("minotaur_idle");
+    public static final DeferredHolder<SoundEvent, SoundEvent> TENTACLE_SQUISH = register("tentacle_squish");
 
     private static DeferredHolder<SoundEvent,SoundEvent> register(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(FTBOceanMobs.id(name)));

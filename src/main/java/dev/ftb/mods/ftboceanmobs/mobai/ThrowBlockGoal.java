@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.mobai;
 
-import dev.ftb.mods.ftboceanmobs.MiscUtil;
+import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import dev.ftb.mods.ftboceanmobs.entity.TumblingBlockEntity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;

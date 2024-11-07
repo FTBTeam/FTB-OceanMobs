@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.mobai;
 
-import dev.ftb.mods.ftboceanmobs.MiscUtil;
+import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;

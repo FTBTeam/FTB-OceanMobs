@@ -61,7 +61,8 @@ public class ShadowBeast extends Monster implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new ShadowRoarGoal(this));
-        this.goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.0, false, 12));
+        this.goalSelector.addGoal(2, new LeapAtTargetGoal(this, 0.42F));
+        this.goalSelector.addGoal(3, new DelayedMeleeAttackGoal(this, 1.0, false, 12));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
@@ -74,7 +75,6 @@ public class ShadowBeast extends Monster implements GeoEntity {
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "Walk/Idle", 10, this::walkIdleRegenState));
         controllers.add(new AnimationController<>(this, "Attacking", 5, this::attackState));
-//        controllers.add(DefaultAnimations.genericAttackAnimation(this, DefaultAnimations.ATTACK_STRIKE));
     }
 
     private PlayState attackState(AnimationState<ShadowBeast> state) {
@@ -82,7 +82,6 @@ public class ShadowBeast extends Monster implements GeoEntity {
         if (isRoaring()) {
             return state.setAndContinue(ANIM_ATTACK_ROAR);
         } else if (swinging) {
-//            state.setControllerSpeed(2f);
             return state.setAndContinue(DefaultAnimations.ATTACK_STRIKE);
         }
         return PlayState.STOP;
@@ -91,8 +90,8 @@ public class ShadowBeast extends Monster implements GeoEntity {
     private PlayState walkIdleRegenState(AnimationState<ShadowBeast> state) {
         state.setControllerSpeed(1f);
         if (state.isMoving()) {
+            state.setControllerSpeed(3f);
             state.setAnimation(DefaultAnimations.WALK);
-            state.setControllerSpeed(2f);
         } else {
             state.setAnimation(DefaultAnimations.IDLE);
         }
@@ -169,12 +168,11 @@ public class ShadowBeast extends Monster implements GeoEntity {
         public void tick() {
             shadowBeast.roarWarmupTick--;
             if (shadowBeast.roarWarmupTick == 16) {
-                shadowBeast.level().playSound(null, shadowBeast.blockPosition(), SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 1f, 1.5f);
+                shadowBeast.level().playSound(null, shadowBeast.blockPosition(), SoundEvents.WARDEN_ROAR, SoundSource.HOSTILE, 1f, 1.5f + shadowBeast.getRandom().nextFloat() * 0.5f);
             } else if (shadowBeast.roarWarmupTick == 10) {
                 shadowBeast.level().getNearbyEntities(Player.class, TargetingConditions.DEFAULT, shadowBeast, shadowBeast.getBoundingBox().inflate(16.0))
                         .forEach(player -> player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40 + shadowBeast.getRandom().nextInt(60), 3)));
             }
-
         }
     }
 

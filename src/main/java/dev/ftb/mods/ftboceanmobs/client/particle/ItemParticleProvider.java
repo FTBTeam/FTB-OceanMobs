@@ -18,6 +18,8 @@ public record ItemParticleProvider(ItemStack stack) implements ParticleProvider<
     public static class ItemParticle extends BreakingItemParticle {
         protected ItemParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, ItemStack stack) {
             super(level, x, y, z, xSpeed, ySpeed, zSpeed, stack);
+            setLifetime(30);
+            gravity = 0.1F;
         }
     }
 }

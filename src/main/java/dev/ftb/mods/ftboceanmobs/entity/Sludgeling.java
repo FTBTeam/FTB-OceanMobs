@@ -26,7 +26,7 @@ public class Sludgeling extends Slime {
         super.setSize(1, resetHealth);
 
         this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(10.0);
-        this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.32);
+        this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.36);
         this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(2.5);
     }
 

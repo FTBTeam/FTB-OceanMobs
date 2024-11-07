@@ -28,10 +28,8 @@ import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.animation.AnimationState;
-import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.constant.DefaultAnimations;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
@@ -104,7 +102,7 @@ public class RiftMinotaur extends Monster implements GeoEntity, IChargingMob, IT
     public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
         populateDefaultEquipmentSlots(level.getRandom(), difficulty);
 
-        var data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
+        @SuppressWarnings("deprecation") var data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
 
         // minotaur always holds weapon in left hand
         setLeftHanded(true);

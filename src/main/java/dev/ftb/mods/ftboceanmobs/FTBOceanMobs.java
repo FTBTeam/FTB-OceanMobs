@@ -4,14 +4,12 @@ import com.mojang.logging.LogUtils;
 import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
 import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
 import dev.ftb.mods.ftboceanmobs.entity.*;
-import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
-import dev.ftb.mods.ftboceanmobs.registry.ModItems;
-import dev.ftb.mods.ftboceanmobs.registry.ModParticleTypes;
-import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
+import dev.ftb.mods.ftboceanmobs.registry.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.SpawnEggItem;
+import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -20,6 +18,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
@@ -61,7 +60,7 @@ public class FTBOceanMobs
         event.put(ModEntityTypes.SLUDGELING.get(), Sludgeling.createAttributes().build());
         event.put(ModEntityTypes.SHADOW_BEAST.get(), ShadowBeast.createAttributes().build());
         event.put(ModEntityTypes.RIFT_MINOTAUR.get(), RiftMinotaur.createAttributes().build());
-        event.put(ModEntityTypes.TENTACLED_HORROR.get(), Monster.createMonsterAttributes().build());
+        event.put(ModEntityTypes.TENTACLED_HORROR.get(), TentacledHorror.createAttributes().build());
         event.put(ModEntityTypes.RIFT_DEMON.get(), Monster.createMonsterAttributes().build());
     }
 
