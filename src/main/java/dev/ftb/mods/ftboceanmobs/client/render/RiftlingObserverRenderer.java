@@ -58,9 +58,9 @@ public class RiftlingObserverRenderer extends GeoEntityRenderer<RiftlingObserver
                 poseStack.mulPose(Axis.XP.rotationDegrees(f5 * (180.0F / (float)Math.PI)));
                 float f7 = gazeWarmupTime * 0.05F * -1.5F;
                 float gazeScaleSq = gazeScale * gazeScale;
-                int red = 64 + (int)(gazeScaleSq * 191.0F);
-                int green = 32 + (int)(gazeScaleSq * 191.0F);
-                int blue = 128 - (int)(gazeScaleSq * 64.0F);
+                int red = 58 + (int)(gazeScaleSq * 130f);
+                int green = 50 - (int)(gazeScaleSq * 7f);
+                int blue = 188 + (int)(gazeScaleSq * 50f);
                 float f11 = Mth.cos(f7 + (float) (Math.PI * 3.0 / 4.0)) * 0.282F;
                 float f12 = Mth.sin(f7 + (float) (Math.PI * 3.0 / 4.0)) * 0.282F;
                 float f13 = Mth.cos(f7 + (float) (Math.PI / 4)) * 0.282F;

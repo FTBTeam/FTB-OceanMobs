@@ -125,11 +125,11 @@ public class RiftlingObserver extends Monster implements GeoEntity {
         } else {
             boolean potion = source.getDirectEntity() instanceof ThrownPotion;
             if (!source.is(DamageTypeTags.IS_PROJECTILE) && !potion) {
-                boolean wasHurt = super.hurt(source, amount);
-                if (!this.level().isClientSide() && this.random.nextInt(7) != 0) {
+                if (!this.level().isClientSide() && this.random.nextInt(3) != 0) {
                     this.teleport();
+                    return false;
                 }
-                return wasHurt;
+                return super.hurt(source, amount);
             } else {
                 for (int i = 0; i < 64; i++) {
                     if (this.teleport()) {
@@ -297,11 +297,12 @@ public class RiftlingObserver extends Monster implements GeoEntity {
     }
 
     private static class ObserverGazeAttackGoal extends Goal {
-        public static final int TOTAL_TIME = 30;
-        public static final int ATTACK_TIME = 20;
+        public static final int TOTAL_TIME = reducedTickDelay(30);
+        public static final int ATTACK_TIME = reducedTickDelay(20);
 
         private final RiftlingObserver observer;
         private int chargeTime;
+        private LivingEntity target;
 
         public ObserverGazeAttackGoal(RiftlingObserver observer) {
             this.observer = observer;
@@ -315,27 +316,20 @@ public class RiftlingObserver extends Monster implements GeoEntity {
                 return false;
             }
 
-            LivingEntity target = observer.getTarget();
+            target = observer.getTarget();
             return target != null && target.isAlive() && observer.canAttack(target) && observer.isLookingAtMe(target);
         }
 
         @Override
         public boolean canContinueToUse() {
-            if (chargeTime > TOTAL_TIME) {
-                return false;
-            }
-            LivingEntity target = observer.getTarget();
-            return target != null && target.isAlive() && observer.canAttack(target) && observer.getSensing().hasLineOfSight(target);
+            return chargeTime < TOTAL_TIME && target.isAlive() && observer.canAttack(target) && observer.getSensing().hasLineOfSight(target);
         }
 
         @Override
         public void start() {
-            chargeTime = -10;
+            chargeTime = -5;
             observer.getNavigation().stop();
-            if (observer.getTarget() != null) {
-                observer.getLookControl().setLookAt(observer.getTarget(), 45f, 10f);
-            }
-            observer.getNavigation().stop();
+            observer.getLookControl().setLookAt(target, 45f, 10f);
             observer.setSyncedGazeTarget(observer.getTarget());
         }
 
@@ -344,16 +338,15 @@ public class RiftlingObserver extends Monster implements GeoEntity {
             chargeTime = 0;
             observer.setGazeWarmingUp(false);
             observer.setSyncedGazeTarget(null);
+            target = null;
         }
 
         @Override
         public void tick() {
-            observer.setSyncedGazeTarget(chargeTime >= 6 && chargeTime <= 20 ? observer.getTarget() : null);
-            if (observer.getTarget() != null) {
-                observer.getLookControl().setLookAt(observer.getTarget());
-            }
+            observer.setSyncedGazeTarget(chargeTime >= 3 && chargeTime <= 10 ? target : null);
+            observer.getLookControl().setLookAt(target);
 
-            chargeTime += 2;
+            chargeTime++;
             if (chargeTime == 0) {
                 observer.setGazeWarmingUp(true);
             } else if (chargeTime == ATTACK_TIME) {
@@ -361,9 +354,8 @@ public class RiftlingObserver extends Monster implements GeoEntity {
 
                 observer.level().playSound(null, observer.blockPosition(), SoundEvents.EVOKER_CAST_SPELL, SoundSource.HOSTILE, 1f, 1f);
 
-                LivingEntity target = observer.getTarget();
                 if (target != null && target.isAlive() && observer.isLookingAtMe(target)) {
-                    observer.level().playSound(null, target.blockPosition(), SoundEvents.PLAYER_HURT, SoundSource.HOSTILE, 1f, 1f);
+                    observer.level().playSound(null, target.blockPosition(), SoundEvents.EVOKER_CAST_SPELL, SoundSource.HOSTILE, 1f, 1f);
                     target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 3));
                     target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 150, 10));
                 }

@@ -18,6 +18,7 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.ByIdMap;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
@@ -172,6 +173,16 @@ public class TentacledHorror extends Monster implements GeoEntity {
         }
     }
 
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (super.hurt(source, amount)) {
+            if (getAttackState().isGrabbing() && (source.is(DamageTypeTags.IS_FIRE) || random.nextInt(8) == 0)) {
+                setAttackState(AttackState.GRAB_BREAK);
+            }
+        }
+        return false;
+    }
+
     private PlayState walkIdleState(AnimationState<TentacledHorror> state) {
         if (state.isMoving()) {
             state.setAnimation(DefaultAnimations.WALK);
@@ -201,10 +212,6 @@ public class TentacledHorror extends Monster implements GeoEntity {
         double xOff = Mth.cos(rot * (float) (Math.PI / 180.0)) * 7.0;
         double zOff = Mth.sin(rot * (float) (Math.PI / 180.0)) * 7.0;
 
-//        float speed = Math.min(0.25F, this.walkAnimation.speed());
-//        float pos = this.walkAnimation.position();
-//        float f2 = 0.12F * Mth.cos(pos * 1.5F) * 2.0F * speed;
-
         return super.getPassengerAttachmentPoint(entity, dimensions, partialTick)
                 .add(xOff, -4, zOff);
     }
@@ -230,7 +237,8 @@ public class TentacledHorror extends Monster implements GeoEntity {
     }
 
     static class TentacleGrabGoal extends Goal {
-        private static final double GRAB_HOLD_DIST = 1.75;
+        private static final int WARMUP_TIME = 40;
+        private static final int COOLDOWN_TIME = 30;
 
         private final TentacledHorror horror;
         private LivingEntity target;
@@ -261,13 +269,13 @@ public class TentacledHorror extends Monster implements GeoEntity {
 
         @Override
         public void start() {
-            cooldownCounter = reducedTickDelay(30);
+            cooldownCounter = reducedTickDelay(COOLDOWN_TIME);
             if (target.getVehicle() == horror) {
                 // this can happen when reloading world and horror is already holding someone
                 warmupCounter = 0;
                 horror.setAttackState(AttackState.GRAB_HOLD);
             } else {
-                warmupCounter = reducedTickDelay(40);
+                warmupCounter = reducedTickDelay(WARMUP_TIME);
                 horror.setAttackState(AttackState.GRAB_START);
             }
         }
@@ -299,29 +307,31 @@ public class TentacledHorror extends Monster implements GeoEntity {
                     }
                 }
                 case GRAB_HOLD -> {
-                    if (target.getRandom().nextFloat() < 0.08f) {
+                    if (target.getRandom().nextInt(20) == 0) {
                         // some crushing damage to the player periodically
                         target.hurt(target.level().damageSources().mobAttack(horror), 8f);
                     }
-
                     if (horror.random.nextInt(100) == 0) {
-                        // sometimes just let go & yeet the player in a random direction
+                        // sometimes just let go
                         horror.setAttackState(AttackState.GRAB_BREAK);
+                    } else {
+                        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 5, false, false));
+                        target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, WARMUP_TIME, 3, false, false));
+                    }
+                }
+                case GRAB_BREAK -> {
+                    if (target.getVehicle() == horror) {
+                        // let go and yeet the player in a random direction
                         target.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-                        RandomSource r = horror.random;
                         target.stopRiding();
                         target.setOnGround(false);
+                        RandomSource r = horror.random;
                         target.setDeltaMovement(new Vec3(r.nextFloat() - 0.5f, r.nextFloat() * 0.2f + 0.15f, r.nextFloat() - 0.5f).scale(10.5));
                         if (target instanceof ServerPlayer sp) {
                             sp.connection.send(new ClientboundSetEntityMotionPacket(target));
                         }
                         target.level().playSound(null, target.blockPosition(), SoundEvents.TRIDENT_THROW.value(), SoundSource.HOSTILE);
-                    } else {
-                        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 5, false, false));
-                        target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 3, false, false));
                     }
-                }
-                case GRAB_BREAK -> {
                     if (cooldownCounter > 0 && --cooldownCounter == 0) {
                         cooldownCounter--;
                     }
@@ -437,11 +447,7 @@ public class TentacledHorror extends Monster implements GeoEntity {
     public static class Listener {
         @SubscribeEvent
         public static void onHurt(LivingIncomingDamageEvent event) {
-            if (event.getEntity() instanceof TentacledHorror horror
-                    && event.getSource().is(DamageTypeTags.IS_FIRE)
-                    && horror.getAttackState().isGrabbing()) {
-                horror.setAttackState(AttackState.GRAB_BREAK);
-            } else if (event.getEntity().getVehicle() instanceof TentacledHorror) {
+            if (event.getEntity().getVehicle() instanceof TentacledHorror) {
                 // grabbed players take extra damage
                 event.setAmount(event.getAmount() * 1.25f);
             }

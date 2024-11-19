@@ -76,7 +76,7 @@ public class AbyssalWinged extends Monster implements Enemy, GeoEntity {
     @Override
     protected AABB getAttackBoundingBox() {
         // long arms...
-        return super.getAttackBoundingBox().inflate(1.2);
+        return super.getAttackBoundingBox().inflate(1.4);
     }
 
     @Override
