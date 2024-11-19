@@ -62,10 +62,9 @@ public class ChargeGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        boolean b = target.isAlive() && mob.canAttack(target)
+        return target.isAlive() && mob.canAttack(target)
                 && !isStandingInFluid()
                 && (chargeWarmup > 0 || !mob.getNavigation().isDone());
-        return b;
     }
 
     @Override

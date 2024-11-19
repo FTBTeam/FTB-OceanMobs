@@ -267,7 +267,7 @@ public class TentacledHorror extends Monster implements GeoEntity {
                 warmupCounter = 0;
                 horror.setAttackState(AttackState.GRAB_HOLD);
             } else {
-                warmupCounter = reducedTickDelay(32);
+                warmupCounter = reducedTickDelay(40);
                 horror.setAttackState(AttackState.GRAB_START);
             }
         }

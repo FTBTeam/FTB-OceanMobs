@@ -34,6 +34,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     protected static final EntityDataAccessor<Boolean> REGEN = SynchedEntityData.defineId(CorrosiveCraig.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Boolean> FIRE_FIST = SynchedEntityData.defineId(CorrosiveCraig.class, EntityDataSerializers.BOOLEAN);
 
     public static final RawAnimation REGEN_ANIMATION = RawAnimation.begin().thenPlay("misc.regeneration");
 
@@ -48,6 +49,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
         super.defineSynchedData(builder);
 
         builder.define(REGEN, false);
+        builder.define(FIRE_FIST, false);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -79,7 +81,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
     @Override
     protected AABB getAttackBoundingBox() {
         // long arms...
-        return super.getAttackBoundingBox().inflate(1.7);
+        return super.getAttackBoundingBox().inflate(1.9);
     }
 
     @Override
@@ -117,7 +119,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
             if (isRegenActive()) regenTimer = 50;
             if (regenTimer == 50 && level().isClientSide) {
                 RandomSource rnd = getRandom();
-                for (int i = 0; i < 20; i++) {
+                for (int i = 0; i < 50; i++) {
                     Vec3 pos = getEyePosition().add(rnd.nextDouble() - 0.5, rnd.nextDouble() + 0.5, rnd.nextDouble() - 0.5);
                     level().addParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, 0.2F, 1F, 0.2F), pos.x, pos.y, pos.z, 0, 0, 0);
                 }
@@ -144,7 +146,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
     @Override
     public boolean doHurtTarget(Entity entity) {
         if (super.doHurtTarget(entity)) {
-            if (entity.getRandom().nextBoolean()) {
+            if (entityData.get(FIRE_FIST)) {
                 entity.igniteForTicks(40 + entity.getRandom().nextInt(40));
             }
             return true;
@@ -170,6 +172,22 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
         @Override
         public boolean canContinueToUse() {
             return CorrosiveCraig.this.regenTimer == 0 && super.canContinueToUse();
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+
+            CorrosiveCraig.this.entityData.set(FIRE_FIST, false);
+        }
+
+        @Override
+        public void tick() {
+            super.tick();
+
+            if (mob.getRandom().nextInt(30) == 0) {
+                CorrosiveCraig.this.entityData.set(FIRE_FIST, !CorrosiveCraig.this.entityData.get(FIRE_FIST));
+            }
         }
     }
 }

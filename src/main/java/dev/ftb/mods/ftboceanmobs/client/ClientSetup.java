@@ -38,12 +38,11 @@ public class ClientSetup {
         event.registerEntityRenderer(ModEntityTypes.SHADOW_BEAST.get(), ctx -> ShadowBeastRenderer.scaled(ctx,0.25f));
         event.registerEntityRenderer(ModEntityTypes.RIFT_MINOTAUR.get(), ctx -> RiftMinotaurRenderer.scaled(ctx,1.17f));
         event.registerEntityRenderer(ModEntityTypes.TENTACLED_HORROR.get(), ctx -> TentacledHorrorRenderer.scaled(ctx, 2.9f));
+        event.registerEntityRenderer(ModEntityTypes.RIFT_DEMON.get(), ctx -> RiftDemonRenderer.scaled(ctx, 1.18f));
 
+        // other entities
         event.registerEntityRenderer(ModEntityTypes.SLUDGELING.get(), SludgelingRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.TUMBLING_BLOCK.get(), TumblingBlockRenderer::new);
-
-        // TODO when we get some actual entity models...
-        event.registerEntityRenderer(ModEntityTypes.RIFT_DEMON.get(), DummyRenderer::new);
     }
 
     public static void registerParticleProviders(RegisterParticleProvidersEvent event) {

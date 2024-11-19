@@ -61,7 +61,8 @@ public class ModEntityTypes {
         return EntityType.Builder.of(CorrosiveCraig::new, MobCategory.MONSTER)
                 .sized(1.55F, 3.2F)
                 .eyeHeight(2.85F)
-                .clientTrackingRange(10);
+                .clientTrackingRange(10)
+                .fireImmune();
     }
 
     private static EntityType.Builder<MossbackGoliath> mossbackGoliath() {
@@ -101,9 +102,10 @@ public class ModEntityTypes {
 
     private static EntityType.Builder<RiftDemon> riftDemon() {
         return EntityType.Builder.of(RiftDemon::new, MobCategory.MONSTER)
-                .sized(0.6F, 1.95F)
-                .eyeHeight(0.175F)
-                .clientTrackingRange(10);
+                .sized(1.75F, 3.75F)
+                .eyeHeight(3.4F)
+                .clientTrackingRange(10)
+                .fireImmune();
     }
 
     private static EntityType.Builder<Sludgeling> sludgeling() {

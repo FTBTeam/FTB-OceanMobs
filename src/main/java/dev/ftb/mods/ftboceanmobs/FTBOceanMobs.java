@@ -61,7 +61,7 @@ public class FTBOceanMobs
         event.put(ModEntityTypes.SHADOW_BEAST.get(), ShadowBeast.createAttributes().build());
         event.put(ModEntityTypes.RIFT_MINOTAUR.get(), RiftMinotaur.createAttributes().build());
         event.put(ModEntityTypes.TENTACLED_HORROR.get(), TentacledHorror.createAttributes().build());
-        event.put(ModEntityTypes.RIFT_DEMON.get(), Monster.createMonsterAttributes().build());
+        event.put(ModEntityTypes.RIFT_DEMON.get(), RiftDemon.createAttributes().build());
     }
 
     private void registerAll(IEventBus modBus) {
