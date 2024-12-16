@@ -5,10 +5,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.*;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -58,9 +55,19 @@ public class ModItems {
             = registerSpawnEgg("tentacled_horror", ModEntityTypes.TENTACLED_HORROR, 0xFF342455, 0xFFA466BC);
     public static final DeferredItem<Item> RIFT_DEMON_SPAWN_EGG
             = registerSpawnEgg("rift_demon", ModEntityTypes.RIFT_DEMON, 0xFF220A40, 0xFFEFAA46);
+    public static final DeferredItem<Item> RIFT_WEAVER_SPAWN_EGG
+            = registerSpawnEgg("rift_weaver", ModEntityTypes.RIFT_WEAVER, 0xFF220A40, 0xFFEFAA46);
 
     public static final DeferredItem<Item> SLUDGE_BALL
             = ITEMS.register("sludge_ball", () -> new Item(new Item.Properties()));
+
+    public static final DeferredItem<BucketItem> ABYSSAL_WATER_BUCKET
+            = ITEMS.register("abyssal_water_bucket", () -> new BucketItem(ModFluids.ABYSSAL_WATER.get(), filledBucketProps()));
+
+    static {
+        ITEMS.registerSimpleBlockItem("energy_geyser", ModBlocks.ENERGY_GEYSER);
+        ITEMS.registerSimpleBlockItem("sludge_block", ModBlocks.SLUDGE_BLOCK);
+    }
 
     public static List<DeferredItem<Item>> getSpawnEggs() {
         return Collections.unmodifiableList(SPAWN_EGGS);
@@ -70,5 +77,9 @@ public class ModItems {
         DeferredItem<Item> egg = ITEMS.register(name + "_spawn_egg",  () -> new DeferredSpawnEggItem(type, bgColor, hiColor, new Item.Properties()));
         SPAWN_EGGS.add(egg);
         return egg;
+    }
+
+    public static Item.Properties filledBucketProps() {
+        return new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET);
     }
 }

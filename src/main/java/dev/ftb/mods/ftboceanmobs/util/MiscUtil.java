@@ -22,4 +22,12 @@ public class MiscUtil {
             from.level().addParticle(particle, start.x, start.y, start.z, vel2.x, vel2.y, vel2.z);
         }
     }
+
+    public static boolean isLookingAtMe(LivingEntity target, LivingEntity looker, double minAngle) {
+        Vec3 viewVec = looker.getViewVector(1.0F).normalize();
+        Vec3 offsetVec = new Vec3(target.getX() - looker.getX(), target.getEyeY() - looker.getEyeY(), target.getZ() - looker.getZ());
+        offsetVec = offsetVec.normalize();
+        double dot = viewVec.dot(offsetVec);
+        return dot > 1.0 - minAngle && looker.hasLineOfSight(target);
+    }
 }

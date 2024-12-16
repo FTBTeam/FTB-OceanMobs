@@ -14,7 +14,12 @@ public class DataGenerators {
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 
         generator.addProvider(event.includeClient(), new ModItemModelProvider(generator, existingFileHelper));
+        generator.addProvider(event.includeClient(), new ModBlockStateProvider(generator.getPackOutput(), existingFileHelper));
         generator.addProvider(event.includeClient(), new ModLangProvider(generator.getPackOutput()));
         generator.addProvider(event.includeClient(), new ModSoundProvider(generator.getPackOutput(), existingFileHelper));
+
+        generator.addProvider(event.includeServer(), new ModTagsProvider.EntityType(generator.getPackOutput(), lookupProvider, existingFileHelper));
+        generator.addProvider(event.includeServer(), new ModTagsProvider.Block(generator.getPackOutput(), lookupProvider, existingFileHelper));
+        generator.addProvider(event.includeServer(), new ModLootTableProvider(generator.getPackOutput(), lookupProvider));
     }
 }
