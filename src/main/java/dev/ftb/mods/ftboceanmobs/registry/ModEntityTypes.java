@@ -2,13 +2,16 @@ package dev.ftb.mods.ftboceanmobs.registry;
 
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.entity.*;
+import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class ModEntityTypes {
@@ -33,6 +36,9 @@ public class ModEntityTypes {
             = register("tentacled_horror", ModEntityTypes::tentacledHorror);
     public static final Supplier<EntityType<RiftDemon>> RIFT_DEMON
             = register("rift_demon", ModEntityTypes::riftDemon);
+    public static final Supplier<EntityType<RiftWeaverBoss>> RIFT_WEAVER
+            = register("rift_weaver", ModEntityTypes::riftWeaver);
+
     public static final Supplier<EntityType<Sludgeling>> SLUDGELING
             = register("sludgeling", ModEntityTypes::sludgeling);
     public static final Supplier<EntityType<TumblingBlockEntity>> TUMBLING_BLOCK
@@ -104,6 +110,14 @@ public class ModEntityTypes {
         return EntityType.Builder.of(RiftDemon::new, MobCategory.MONSTER)
                 .sized(1.75F, 3.75F)
                 .eyeHeight(3.4F)
+                .clientTrackingRange(10)
+                .fireImmune();
+    }
+
+    private static EntityType.Builder<RiftWeaverBoss> riftWeaver() {
+        return EntityType.Builder.of(RiftWeaverBoss::new, MobCategory.MONSTER)
+                .sized(8F, 15F)
+                .eyeHeight(15F)
                 .clientTrackingRange(10)
                 .fireImmune();
     }

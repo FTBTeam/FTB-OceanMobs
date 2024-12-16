@@ -27,6 +27,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -44,9 +45,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.*;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
@@ -68,6 +67,7 @@ public class TumblingBlockEntity extends ThrowableProjectile {
 
     public final Vector3f tumbleVec;  // used for rendering
     private HitBehaviour hitBehaviour = HitBehaviour.SHATTER;
+    private boolean canDropItem = true;
 
     public TumblingBlockEntity(EntityType<TumblingBlockEntity> type, Level worldIn) {
         super(type, worldIn);
@@ -104,6 +104,11 @@ public class TumblingBlockEntity extends ThrowableProjectile {
 
     public TumblingBlockEntity setHitBehaviour(HitBehaviour hitBehaviour) {
         this.hitBehaviour = hitBehaviour;
+        return this;
+    }
+
+    public TumblingBlockEntity setCanDropItem(boolean canDropItem) {
+        this.canDropItem = canDropItem;
         return this;
     }
 
@@ -144,8 +149,8 @@ public class TumblingBlockEntity extends ThrowableProjectile {
         super.tick();  // handles nearly all the in-flight logic
 
         if (!level().isClientSide) {
-            BlockPos blockpos1 = blockPosition(); //new BlockPos(this);
-            if (!onGround() && (tickCount > 100 && (blockpos1.getY() < 1 || blockpos1.getY() > 256) || tickCount > 600)) {
+            BlockPos pos = blockPosition();
+            if (!onGround() && (tickCount > 100 && (pos.getY() < 1 || pos.getY() > 256) || tickCount > 600)) {
                 dropAsItem();
                 discard();
             }
@@ -162,19 +167,22 @@ public class TumblingBlockEntity extends ThrowableProjectile {
                         dropAsItem();
                     }
                 }
-                case DROP_ITEM -> dropAsItem();
-                case SHATTER -> {
-                    if (getStack().getItem() instanceof BlockItem bi) {
-                        BlockState state = bi.getBlock().defaultBlockState();
-                        level().levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, blockPosition(), Block.getId(state));
+                case PLACE_BLOCK_ON_ENTITY -> {
+                    if (result instanceof BlockHitResult bhr && !tryPlaceAsBlock(bhr)) {
+                        dropAsItem();
+                    } else if (result instanceof EntityHitResult ehr && !ehr.getEntity().noPhysics && !tryPlaceOnEntity(ehr)) {
+                        shatter();
                     }
                 }
+                case DROP_ITEM -> dropAsItem();
+                case SHATTER -> shatter();
             }
             level().getEntities(this, getBoundingBox().inflate(1.0), EntitySelector.LIVING_ENTITY_STILL_ALIVE)
                     .forEach(e -> e.hurt(level().damageSources().fallingBlock(this), 6f));
         }
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean tryPlaceAsBlock(BlockHitResult brtr) {
         ItemStack stack = getStack();
         if (!(stack.getItem() instanceof BlockItem)) {
@@ -197,9 +205,40 @@ public class TumblingBlockEntity extends ThrowableProjectile {
         return false;
     }
 
+    private boolean tryPlaceOnEntity(EntityHitResult ehr) {
+        ItemStack stack = getStack();
+        if (!(stack.getItem() instanceof BlockItem)) {
+            return false;
+        }
+        AABB aabb = ehr.getEntity().getBoundingBox().inflate(1, 0, 1);
+        Player placer = getOwner() instanceof Player p ? p : getFakePlayer();
+
+        int placed = 0;
+        for (BlockPos pos : BlockPos.randomBetweenClosed(level().random, 1,
+                Mth.floor(aabb.minX), Mth.floor(aabb.minY), Mth.floor(aabb.minZ),
+                Mth.floor(aabb.maxX), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ))) {
+            BlockSnapshot snapshot = BlockSnapshot.create(level().dimension(), level(), pos);
+            if (!EventHooks.onBlockPlace(placer, snapshot, Direction.UP)) {
+                level().setBlock(pos, ((BlockItem) stack.getItem()).getBlock().defaultBlockState(), Block.UPDATE_ALL);
+                placed++;
+            }
+        }
+
+        return placed > 0;
+    }
+
     private void dropAsItem() {
-        if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+        if (canDropItem && this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
             spawnAtLocation(getStack().copy(), 0.0F);
+        } else {
+            shatter();
+        }
+    }
+
+    private void shatter() {
+        if (getStack().getItem() instanceof BlockItem bi) {
+            BlockState state = bi.getBlock().defaultBlockState();
+            level().levelEvent(LevelEvent.PARTICLES_DESTROY_BLOCK, blockPosition(), Block.getId(state));
         }
     }
 
@@ -211,9 +250,10 @@ public class TumblingBlockEntity extends ThrowableProjectile {
     }
 
     public enum HitBehaviour {
-        PLACE_BLOCK,
-        DROP_ITEM,
-        SHATTER  // just shatter into a cloud of particles
+        PLACE_BLOCK,        // place as block, only if hitting a block
+        PLACE_BLOCK_ON_ENTITY,  // always place as block, even if hitting an entity
+        DROP_ITEM,          // drop as an item if possible
+        SHATTER             // just shatter into a cloud of particles
     }
 //    /**
 //     * Stores a copy of the item being used, so the player's held version doesn't get modified when

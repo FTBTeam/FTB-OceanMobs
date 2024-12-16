@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_top",
+  "textures": {
+    "side": "ftboceanmobs:block/energy_geyser_side",
+    "top": "ftboceanmobs:block/energy_geyser_top"
+  }
+}

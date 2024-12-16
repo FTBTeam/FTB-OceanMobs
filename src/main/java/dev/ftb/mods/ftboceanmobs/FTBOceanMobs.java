@@ -4,12 +4,11 @@ import com.mojang.logging.LogUtils;
 import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
 import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
 import dev.ftb.mods.ftboceanmobs.entity.*;
+import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
 import dev.ftb.mods.ftboceanmobs.registry.*;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.SpawnEggItem;
-import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -17,8 +16,8 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
@@ -41,6 +40,7 @@ public class FTBOceanMobs
 
         registerAll(modEventBus);
 
+        NeoForge.EVENT_BUS.addListener(this::registerCommands);
         NeoForge.EVENT_BUS.addListener(this::onServerStarting);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
@@ -62,14 +62,19 @@ public class FTBOceanMobs
         event.put(ModEntityTypes.RIFT_MINOTAUR.get(), RiftMinotaur.createAttributes().build());
         event.put(ModEntityTypes.TENTACLED_HORROR.get(), TentacledHorror.createAttributes().build());
         event.put(ModEntityTypes.RIFT_DEMON.get(), RiftDemon.createAttributes().build());
+        event.put(ModEntityTypes.RIFT_WEAVER.get(), RiftWeaverBoss.createAttributes().build());
     }
 
     private void registerAll(IEventBus modBus) {
+        ModBlocks.BLOCKS.register(modBus);
         ModItems.ITEMS.register(modBus);
         ModItems.CREATIVE_MODE_TABS.register(modBus);
         ModEntityTypes.ENTITY_TYPES.register(modBus);
         ModParticleTypes.PARTICLES.register(modBus);
         ModSounds.SOUNDS.register(modBus);
+        ModFluids.FLUIDS.register(modBus);
+        ModFluids.FLUID_TYPES.register(modBus);
+        ModMobEffects.MOB_EFFECTS.register(modBus);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -89,5 +94,9 @@ public class FTBOceanMobs
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+    }
+
+    private void registerCommands(RegisterCommandsEvent event) {
+        ModCommands.register(event.getDispatcher(), event.getBuildContext());
     }
 }

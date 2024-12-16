@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -216,14 +217,6 @@ public class RiftlingObserver extends Monster implements GeoEntity {
         return getEntityData().get(DATA_GAZE_WARMING_UP);
     }
 
-    boolean isLookingAtMe(LivingEntity player) {
-        Vec3 vec3 = player.getViewVector(1.0F).normalize();
-        Vec3 vec31 = new Vec3(this.getX() - player.getX(), this.getEyeY() - player.getEyeY(), this.getZ() - player.getZ());
-        vec31 = vec31.normalize();
-        double d1 = vec3.dot(vec31);
-        return d1 > 1.0 - GAZE_MIN_ANGLE && player.hasLineOfSight(this);
-    }
-
     public boolean hasSyncedGazeTarget() {
         return entityData.get(DATA_ATTACK_TARGET) != 0;
     }
@@ -317,7 +310,7 @@ public class RiftlingObserver extends Monster implements GeoEntity {
             }
 
             target = observer.getTarget();
-            return target != null && target.isAlive() && observer.canAttack(target) && observer.isLookingAtMe(target);
+            return target != null && target.isAlive() && observer.canAttack(target) && MiscUtil.isLookingAtMe(observer, target, GAZE_MIN_ANGLE);
         }
 
         @Override
@@ -354,7 +347,7 @@ public class RiftlingObserver extends Monster implements GeoEntity {
 
                 observer.level().playSound(null, observer.blockPosition(), SoundEvents.EVOKER_CAST_SPELL, SoundSource.HOSTILE, 1f, 1f);
 
-                if (target != null && target.isAlive() && observer.isLookingAtMe(target)) {
+                if (target != null && target.isAlive() && MiscUtil.isLookingAtMe(observer, target, GAZE_MIN_ANGLE)) {
                     observer.level().playSound(null, target.blockPosition(), SoundEvents.EVOKER_CAST_SPELL, SoundSource.HOSTILE, 1f, 1f);
                     target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 3));
                     target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 150, 10));

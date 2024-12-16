@@ -1,0 +1,5 @@
+{
+  "parent": "neoforge:item/bucket",
+  "fluid": "ftboceanmobs:abyssal_water",
+  "loader": "neoforge:fluid_container"
+}
