@@ -6,7 +6,9 @@ import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.EntityTypeTagsProvider;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Blocks;
+import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import org.jetbrains.annotations.Nullable;
@@ -37,8 +39,21 @@ public class ModTagsProvider {
         @Override
         protected void addTags(HolderLookup.Provider provider) {
             tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHABLE).add(Blocks.SANDSTONE);
-            tag(FTBOceanMobsTags.Blocks.SEISMIC_CRACKED).add(Blocks.RED_SANDSTONE);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHABLE).add(Blocks.CRIMSON_PLANKS);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHABLE).add(Blocks.BLACKSTONE);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHABLE).add(Blocks.COBBLED_DEEPSLATE);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHABLE).add(Blocks.DEEPSLATE_BRICKS);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHABLE).addTag(Tags.Blocks.GLASS_BLOCKS);
+
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_CRACKED).add(Blocks.CRIMSON_SLAB);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_CRACKED).add(Blocks.CRIMSON_STAIRS);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_CRACKED).add(Blocks.BLACKSTONE_SLAB);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_CRACKED).add(Blocks.CRACKED_DEEPSLATE_BRICKS);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_CRACKED).add(Blocks.CRACKED_DEEPSLATE_TILES);
+
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHED).add(Blocks.RED_SAND);
             tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHED).add(Blocks.SAND);
+            tag(FTBOceanMobsTags.Blocks.SEISMIC_SMASHED).add(Blocks.GRAVEL);
 
             tag(FTBOceanMobsTags.Blocks.DROWNING_SHADOWS_CURE).add(Blocks.SPONGE);
             tag(FTBOceanMobsTags.Blocks.DROWNING_SHADOWS_CURE).add(Blocks.WET_SPONGE);

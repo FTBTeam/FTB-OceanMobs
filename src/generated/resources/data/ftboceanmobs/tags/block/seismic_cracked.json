@@ -1,5 +1,9 @@
 {
   "values": [
-    "minecraft:red_sandstone"
+    "minecraft:crimson_slab",
+    "minecraft:crimson_stairs",
+    "minecraft:blackstone_slab",
+    "minecraft:cracked_deepslate_bricks",
+    "minecraft:cracked_deepslate_tiles"
   ]
 }

@@ -1,5 +1,10 @@
 {
   "values": [
-    "minecraft:sandstone"
+    "minecraft:sandstone",
+    "minecraft:crimson_planks",
+    "minecraft:blackstone",
+    "minecraft:cobbled_deepslate",
+    "minecraft:deepslate_bricks",
+    "#c:glass_blocks"
   ]
 }
