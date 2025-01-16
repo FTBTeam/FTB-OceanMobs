@@ -131,6 +131,15 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         this.setId(ENTITY_COUNTER.getAndAdd(subParts.length + 1) + 1);
     }
 
+    @Override
+    public void setId(int id) {
+        super.setId(id);
+
+        for (int i = 0; i < this.subParts.length; i++) {
+            this.subParts[i].setId(id + i + 1);
+        }
+    }
+
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.FLYING_SPEED, 0.9F)
