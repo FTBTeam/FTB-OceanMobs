@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
+import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.registry.ModFluids;
 import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import net.minecraft.core.BlockPos;
@@ -76,8 +77,8 @@ public class RiftWeaverModes {
                     return;
                 }
                 float angle = boss.getRandom().nextFloat() * Mth.TWO_PI;
-                int x = Math.round(boss.getSpawnPos().getX() + Mth.sin(angle) * (boss.getRandom().nextInt(RiftWeaverBoss.ARENA_RADIUS - 5) + 3));
-                int z = Math.round(boss.getSpawnPos().getZ() + Mth.cos(angle) * (boss.getRandom().nextInt(RiftWeaverBoss.ARENA_RADIUS - 5) + 3));
+                int x = Math.round(boss.getSpawnPos().getX() + Mth.sin(angle) * (boss.getRandom().nextInt(Config.arenaRadius - 5) + 3));
+                int z = Math.round(boss.getSpawnPos().getZ() + Mth.cos(angle) * (boss.getRandom().nextInt(Config.arenaRadius - 5) + 3));
                 int y = boss.level().getHeight(Heightmap.Types.WORLD_SURFACE, x, z) + 1 + boss.getRandom().nextInt(RiftWeaverBoss.MAX_ROAM_HEIGHT);
                 boss.roamTarget = new BlockPos(x, y, z);
             }
@@ -168,7 +169,7 @@ public class RiftWeaverModes {
             if (modeTicksRemaining == 10) {
                 boss.level().explode(boss, boss.getX(), boss.getY(), boss.getZ(), 2f, Level.ExplosionInteraction.MOB);
                 boss.seismicSmasher = new SeismicSmasher(boss.level(), boss.blockPosition(),
-                        RiftWeaverBoss.ARENA_RADIUS - 2, 5, boss::isInArena);
+                        Config.arenaRadius - 2, 5, boss::isInArena);
             }
         }
 

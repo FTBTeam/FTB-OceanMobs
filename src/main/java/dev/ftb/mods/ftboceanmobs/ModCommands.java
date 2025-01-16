@@ -78,15 +78,24 @@ public class ModCommands {
     private static int markArena(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         RiftWeaverBoss weaver = findWeaver(ctx);
 
-        float nBlocks = (int)(RiftWeaverBoss.ARENA_RADIUS * Mth.TWO_PI);
-        float incr = Mth.TWO_PI / nBlocks;
-
-        float angle = 0f;
-        for (int i = 0; i < nBlocks; i++, angle += incr) {
-            int x = weaver.getSpawnPos().getX() + (int) (Mth.cos(angle) * RiftWeaverBoss.ARENA_RADIUS);
-            int z = weaver.getSpawnPos().getZ() + (int) (Mth.sin(angle) * RiftWeaverBoss.ARENA_RADIUS);
-            int y = weaver.level().getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
-            weaver.level().setBlock(new BlockPos(x, y, z), Blocks.GOLD_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+        for (int i = -Config.arenaRadius; i <= Config.arenaRadius; i++) {
+            for (int j = -Config.arenaRadius; j <= Config.arenaRadius; j++) {
+                int x = weaver.getSpawnPos().getX() + i;
+                int z = weaver.getSpawnPos().getZ() + j;
+                int y = weaver.level().getHeight(Heightmap.Types.OCEAN_FLOOR, x, z);
+                long d = Math.round(weaver.getSpawnPos().distToCenterSqr(x, weaver.getSpawnPos().getY(), z));
+                if (Math.abs(d - Config.arenaRadiusSq) < 48) {
+                    for (int k = 0; k < 5; k++) {
+                        weaver.level().setBlock(new BlockPos(x, y + k, z), Blocks.GOLD_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+                    }
+                } else if (d < Config.arenaRadiusSq - 48) {
+                    if (weaver.level().random.nextInt(100) == 0) {
+                        weaver.level().setBlock(new BlockPos(x, y, z), Blocks.SPONGE.defaultBlockState(), Block.UPDATE_ALL);
+                    } else {
+                        weaver.level().setBlock(new BlockPos(x, y, z), Blocks.WATER.defaultBlockState(), Block.UPDATE_ALL);
+                    }
+                }
+            }
         }
         weaver.level().setBlock(weaver.getSpawnPos().above(), Blocks.COPPER_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
 

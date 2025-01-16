@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
+import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.entity.TumblingBlockEntity;
 import dev.ftb.mods.ftboceanmobs.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
@@ -40,7 +41,7 @@ public class ChainsEncaser {
 
         Vec3 viewVec = boss.getViewVector(1f).normalize();
         for (int i = posIndex; i < tgtIndex; i++) {
-            float radius = boss.level().random.nextFloat() * RiftWeaverBoss.ARENA_RADIUS;
+            float radius = boss.level().random.nextFloat() * Config.arenaRadius;
             float yOff = boss.level().random.nextFloat() * (RiftWeaverBoss.ARENA_HEIGHT - 10) + 10;
             float angle = boss.level().random.nextFloat() * Mth.TWO_PI;
             Vec3 launchPos = Vec3.atCenterOf(boss.getSpawnPos()).add(Mth.cos(angle) * radius, yOff, Mth.sin(angle) * radius);

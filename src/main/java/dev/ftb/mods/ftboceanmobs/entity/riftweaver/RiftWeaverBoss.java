@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
+import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobsTags;
 import dev.ftb.mods.ftboceanmobs.mobai.RandomAttackableTargetGoal;
@@ -63,9 +64,7 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class RiftWeaverBoss extends Monster implements GeoEntity {
-    public static final int ARENA_RADIUS = 32;
     public static final int ARENA_HEIGHT = 32;
-    public static final int ARENA_RADIUS_SQ = ARENA_RADIUS * ARENA_RADIUS;
     public static final int MAX_ROAM_HEIGHT = 7;
 
     protected static final EntityDataAccessor<Boolean> HAS_ARMOR = SynchedEntityData.defineId(RiftWeaverBoss.class, EntityDataSerializers.BOOLEAN);
@@ -345,7 +344,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             if (spawnPos == null) {
                 spawnPos = blockPosition();
             }
-            restrictTo(spawnPos, ARENA_RADIUS);
+            restrictTo(spawnPos, Config.arenaRadius);
         }
 
         if (modeTicksRemaining > 0) {
@@ -534,12 +533,11 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     }
 
     public boolean isInArena(Entity entity) {
-        // TODO this may need adjusting once we know exactly what size/shape the arena zone should be
-        return spawnPos.distToCenterSqr(entity.getX(), entity.getY(), entity.getZ()) < ARENA_RADIUS_SQ;
+        return spawnPos.distToCenterSqr(entity.getX(), entity.getY(), entity.getZ()) < Config.arenaRadiusSq;
     }
 
     public boolean isInArena(BlockPos pos) {
-        return pos.distSqr(spawnPos) < ARENA_RADIUS_SQ;
+        return pos.distSqr(spawnPos) < Config.arenaRadiusSq;
     }
 
     public BlockPos getSpawnPos() {
