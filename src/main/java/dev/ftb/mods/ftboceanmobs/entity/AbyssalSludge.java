@@ -111,8 +111,9 @@ public class AbyssalSludge extends Monster implements GeoEntity {
 
     private static class ThrowSludgeGoal extends Goal {
         private static final int SLUDGE_WARMUP_TICKS = 24;
+        private static final TargetingConditions SLIME_COUNT_TARGETING
+                = TargetingConditions.forNonCombat().range(16.0).ignoreLineOfSight().ignoreInvisibilityTesting();
 
-        private final TargetingConditions slimeCountTargeting = TargetingConditions.forNonCombat().range(16.0).ignoreLineOfSight().ignoreInvisibilityTesting();
         private final AbyssalSludge abyssalSludge;
 
         public ThrowSludgeGoal(AbyssalSludge abyssalSludge) {
@@ -122,9 +123,13 @@ public class AbyssalSludge extends Monster implements GeoEntity {
         @Override
         public boolean canUse() {
             LivingEntity target = abyssalSludge.getTarget();
-            if (target != null && target.isAlive() && abyssalSludge.canAttack(target) && abyssalSludge.distanceToSqr(target) >= 25 && abyssalSludge.tickCount >= abyssalSludge.nextSludgeTick) {
+            if (target != null && target.isAlive()
+                    && abyssalSludge.canAttack(target)
+                    && abyssalSludge.distanceToSqr(target) >= 25
+                    && abyssalSludge.tickCount >= abyssalSludge.nextSludgeTick)
+            {
                 int nSlimes = abyssalSludge.level()
-                        .getNearbyEntities(Slime.class, this.slimeCountTargeting, abyssalSludge, abyssalSludge.getBoundingBox().inflate(16.0))
+                        .getNearbyEntities(Slime.class, SLIME_COUNT_TARGETING, abyssalSludge, abyssalSludge.getBoundingBox().inflate(16.0))
                         .size();
                 return nSlimes < 12;
             }

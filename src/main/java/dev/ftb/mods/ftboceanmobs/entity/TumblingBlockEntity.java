@@ -185,7 +185,7 @@ public class TumblingBlockEntity extends ThrowableProjectile {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean tryPlaceAsBlock(BlockHitResult brtr) {
         ItemStack stack = getStack();
-        if (!(stack.getItem() instanceof BlockItem)) {
+        if (!(stack.getItem() instanceof BlockItem blockItem)) {
             return false;
         }
         BlockPos pos0 = brtr.getBlockPos();
@@ -198,7 +198,7 @@ public class TumblingBlockEntity extends ThrowableProjectile {
         if (level().getBlockState(pos).canBeReplaced(ctx)) {
             BlockSnapshot snapshot = BlockSnapshot.create(level().dimension(), level(), pos);
             if (!EventHooks.onBlockPlace(placer, snapshot, face)) {
-                InteractionResult res = ((BlockItem) stack.getItem()).place(ctx);
+                InteractionResult res = blockItem.place(ctx);
                 return res == InteractionResult.SUCCESS || res == InteractionResult.CONSUME;
             }
         }
@@ -207,7 +207,7 @@ public class TumblingBlockEntity extends ThrowableProjectile {
 
     private boolean tryPlaceOnEntity(EntityHitResult ehr) {
         ItemStack stack = getStack();
-        if (!(stack.getItem() instanceof BlockItem)) {
+        if (!(stack.getItem() instanceof BlockItem blockItem)) {
             return false;
         }
         AABB aabb = ehr.getEntity().getBoundingBox().inflate(1, 0, 1);
@@ -219,7 +219,7 @@ public class TumblingBlockEntity extends ThrowableProjectile {
                 Mth.floor(aabb.maxX), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ))) {
             BlockSnapshot snapshot = BlockSnapshot.create(level().dimension(), level(), pos);
             if (!EventHooks.onBlockPlace(placer, snapshot, Direction.UP)) {
-                level().setBlock(pos, ((BlockItem) stack.getItem()).getBlock().defaultBlockState(), Block.UPDATE_ALL);
+                level().setBlock(pos, blockItem.getBlock().defaultBlockState(), Block.UPDATE_ALL);
                 placed++;
             }
         }
@@ -255,22 +255,4 @@ public class TumblingBlockEntity extends ThrowableProjectile {
         DROP_ITEM,          // drop as an item if possible
         SHATTER             // just shatter into a cloud of particles
     }
-//    /**
-//     * Stores a copy of the item being used, so the player's held version doesn't get modified when
-//     * {@link BlockItem#place(BlockPlaceContext)} is called by {@link #tryPlaceAsBlock(BlockHitResult)}
-//     * (the item has already been taken from the player, when the entity was created)
-//     */
-//    private static class LocalBlockPlaceContext extends BlockPlaceContext {
-//        private final ItemStack stack;
-//
-//        public LocalBlockPlaceContext(UseOnContext context) {
-//            super(context);
-//            stack = context.getItemInHand().copy();
-//        }
-//
-//        @Override
-//        public ItemStack getItemInHand() {
-//            return stack == null ? ItemStack.EMPTY : stack;
-//        }
-//    }
 }

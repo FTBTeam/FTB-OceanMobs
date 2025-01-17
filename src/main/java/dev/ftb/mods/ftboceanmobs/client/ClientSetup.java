@@ -9,7 +9,6 @@ import dev.ftb.mods.ftboceanmobs.network.PlayerAttackTentaclePacket;
 import dev.ftb.mods.ftboceanmobs.registry.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
-import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;

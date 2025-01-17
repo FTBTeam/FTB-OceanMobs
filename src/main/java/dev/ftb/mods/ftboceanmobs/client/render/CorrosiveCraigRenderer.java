@@ -3,7 +3,6 @@ package dev.ftb.mods.ftboceanmobs.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftboceanmobs.client.model.CorrosiveCraigModel;
 import dev.ftb.mods.ftboceanmobs.entity.CorrosiveCraig;
-import dev.ftb.mods.ftboceanmobs.entity.RiftDemon;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.level.block.Blocks;

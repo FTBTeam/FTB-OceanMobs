@@ -22,10 +22,8 @@ import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
-// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(FTBOceanMobs.MODID)
-public class FTBOceanMobs
-{
+public class FTBOceanMobs {
     public static final String MODID = "ftboceanmobs";
     public static final Logger LOGGER = LogUtils.getLogger();
 
@@ -44,10 +42,6 @@ public class FTBOceanMobs
         registerAll(modEventBus);
 
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
-        NeoForge.EVENT_BUS.addListener(this::onServerStarting);
-
-        // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-//        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     public static ResourceLocation id(String path) {
@@ -92,11 +86,6 @@ public class FTBOceanMobs
                 }
             });
         }
-    }
-
-    public void onServerStarting(ServerStartingEvent event) {
-        // Do something when the server starts
-        LOGGER.info("HELLO from server starting");
     }
 
     private void registerCommands(RegisterCommandsEvent event) {
