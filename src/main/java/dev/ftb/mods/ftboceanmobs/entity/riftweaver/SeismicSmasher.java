@@ -82,7 +82,7 @@ public class SeismicSmasher {
                                 BlockState newState = level.random.nextInt(20) == 0 ?
                                         ModBlocks.ENERGY_GEYSER.get().defaultBlockState() :
                                         h.value().defaultBlockState();
-                                level.setBlock(level.random.nextInt(7) == 0 ? workPos.above() : workPos, newState, Block.UPDATE_ALL);
+                                level.setBlock(level.random.nextInt(4) == 0 ? workPos.above() : workPos, newState, Block.UPDATE_ALL);
                             });
                 } else if (state.is(FTBOceanMobsTags.Blocks.SEISMIC_CRACKED)) {
                     blockReg.getRandomElementOf(FTBOceanMobsTags.Blocks.SEISMIC_SMASHED, level.random)
