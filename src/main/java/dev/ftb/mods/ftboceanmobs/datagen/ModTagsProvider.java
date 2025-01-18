@@ -6,6 +6,7 @@ import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.EntityTypeTagsProvider;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
@@ -27,6 +28,7 @@ public class ModTagsProvider {
                     tag(FTBOceanMobsTags.Entity.RIFT_MOBS).add(type.get());
                 }
             }
+            tag(EntityTypeTags.CAN_BREATHE_UNDER_WATER).addTag(FTBOceanMobsTags.Entity.RIFT_MOBS);
         }
     }
 
