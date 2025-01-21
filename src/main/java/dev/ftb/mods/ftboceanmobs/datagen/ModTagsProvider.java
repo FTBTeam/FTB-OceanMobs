@@ -4,8 +4,11 @@ import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobsTags;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
+import net.minecraft.data.tags.EnchantmentTagsProvider;
 import net.minecraft.data.tags.EntityTypeTagsProvider;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
@@ -58,6 +61,18 @@ public class ModTagsProvider {
 
             tag(FTBOceanMobsTags.Blocks.DROWNING_SHADOWS_CURE).add(Blocks.SPONGE);
             tag(FTBOceanMobsTags.Blocks.DROWNING_SHADOWS_CURE).add(Blocks.WET_SPONGE);
+        }
+    }
+
+    public static class Enchantment extends EnchantmentTagsProvider {
+        public Enchantment(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
+            super(output, lookupProvider, FTBOceanMobs.MODID, existingFileHelper);
+        }
+
+        @Override
+        protected void addTags(HolderLookup.Provider provider) {
+            tag(EnchantmentTags.NON_TREASURE).add(FTBOceanMobs.RIFT_DISRUPTOR_ENCHANTMENT);
+            tag(EnchantmentTags.DAMAGE_EXCLUSIVE).add(FTBOceanMobs.RIFT_DISRUPTOR_ENCHANTMENT);
         }
     }
 }

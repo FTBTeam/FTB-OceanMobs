@@ -3,12 +3,16 @@ package dev.ftb.mods.ftboceanmobs;
 import com.mojang.logging.LogUtils;
 import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
 import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
+import dev.ftb.mods.ftboceanmobs.datagen.ModTagsProvider;
 import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
 import dev.ftb.mods.ftboceanmobs.registry.*;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -26,6 +30,9 @@ import org.slf4j.Logger;
 public class FTBOceanMobs {
     public static final String MODID = "ftboceanmobs";
     public static final Logger LOGGER = LogUtils.getLogger();
+
+    public static final ResourceKey<Enchantment> RIFT_DISRUPTOR_ENCHANTMENT
+            = ResourceKey.create(Registries.ENCHANTMENT, id("rift_disruptor"));
 
     public FTBOceanMobs(IEventBus modEventBus, ModContainer modContainer) {
         if (FMLEnvironment.dist.isClient()) {

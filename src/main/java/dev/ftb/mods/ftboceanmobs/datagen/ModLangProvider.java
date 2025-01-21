@@ -40,6 +40,7 @@ public class ModLangProvider extends LanguageProvider {
         addEffect(ModMobEffects.DROWNING_SHADOWS_EFFECT, "Drowning Shadows");
 
         add("ftboceanmobs.itemGroup.tab", "FTB Ocean Mobs");
+        add("enchantment.ftboceanmobs.rift_disruptor", "Rift Disruptor");
         add("ftboceanmobs.subtitles.minotaur_grunts", "Grunting noise");
         add("ftboceanmobs.subtitles.tentacle_squish", "Squishing sounds");
     }
