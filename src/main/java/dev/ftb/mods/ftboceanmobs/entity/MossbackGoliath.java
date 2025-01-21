@@ -207,13 +207,14 @@ public class MossbackGoliath extends Monster implements GeoEntity {
                 if (mossback.shardWarmupTicks == 8) {
                     mossback.entityData.set(DATA_SHARD_FIRING, true);
                     mossback.firingCooldown = 4;
+                    mossback.playSound(SoundEvents.WITCH_THROW, 1f, 1f);
                 } else if (mossback.shardWarmupTicks == 0) {
                     if (target.isBlocking() && target.getItemBySlot(EquipmentSlot.OFFHAND).getItem() instanceof ShieldItem) {
-                        target.level().playSound(null, target.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1f, 1f);
+                        target.playSound(SoundEvents.SHIELD_BLOCK, 1f, 1f);
                         target.getOffhandItem().hurtAndBreak(1, target, EquipmentSlot.OFFHAND);
                     } else {
                         target.hurt(serverLevel.damageSources().mobAttack(mossback), 3);
-                        target.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 40 + mossback.getRandom().nextInt(40)));
+                        target.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 50 + mossback.getRandom().nextInt(40)));
                     }
                 }
             }

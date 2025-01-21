@@ -1,11 +1,13 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -21,6 +23,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
@@ -59,6 +62,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
                 .add(Attributes.ARMOR, 15F)
                 .add(Attributes.ARMOR_TOUGHNESS, 10F)
                 .add(Attributes.FOLLOW_RANGE, 36F)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
                 .add(Attributes.ATTACK_DAMAGE, 15.0);
     }
 
@@ -91,6 +95,14 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
         if (regenTimer > 0) {
             regenTimer--;
         }
+
+        if (regenTimer == 30 && level().isClientSide) {
+            RandomSource rnd = getRandom();
+            for (int i = 0; i < 50; i++) {
+                Vec3 pos = getEyePosition().add(rnd.nextDouble() - 0.5, rnd.nextDouble() + 0.5, rnd.nextDouble() - 0.5);
+                level().addParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, 0.2F, 1F, 0.2F), pos.x, pos.y, pos.z, 0, 0, 0);
+            }
+        }
     }
 
     @Override
@@ -103,7 +115,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
         if (regenTimer == 0) {
             if (state.isMoving()) {
                 state.setAnimation(DefaultAnimations.WALK);
-                state.setControllerSpeed(0.75f);
+                state.setControllerSpeed(0.57f);
             } else {
                 state.setAnimation(DefaultAnimations.IDLE);
             }
@@ -117,13 +129,6 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
         super.onSyncedDataUpdated(key);
         if (REGEN.equals(key)) {
             if (isRegenActive()) regenTimer = 50;
-            if (regenTimer == 50 && level().isClientSide) {
-                RandomSource rnd = getRandom();
-                for (int i = 0; i < 50; i++) {
-                    Vec3 pos = getEyePosition().add(rnd.nextDouble() - 0.5, rnd.nextDouble() + 0.5, rnd.nextDouble() - 0.5);
-                    level().addParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, 0.2F, 1F, 0.2F), pos.x, pos.y, pos.z, 0, 0, 0);
-                }
-            }
         }
     }
 
@@ -157,6 +162,15 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
+    }
+
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        playSound(SoundEvents.IRON_GOLEM_STEP, 1.2F, 0.75F);
+    }
+
+    protected float nextStep() {
+        return moveDist + 0.55f;
     }
 
     class CraigAttackGoal extends DelayedMeleeAttackGoal {

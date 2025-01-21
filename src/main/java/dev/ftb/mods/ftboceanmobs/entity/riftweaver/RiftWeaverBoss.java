@@ -510,9 +510,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
 
     public void setArmorActive(boolean active) {
         getEntityData().set(HAS_ARMOR, active);
-        level().playSound(null, blockPosition(),
-                active ? SoundEvents.ARMOR_EQUIP_NETHERITE.value() : SoundEvents.SHIELD_BREAK,
-                SoundSource.HOSTILE, 5f, 1f);
+        playSound(active ? SoundEvents.ARMOR_EQUIP_NETHERITE.value() : SoundEvents.SHIELD_BREAK, 5f, 1f);
     }
 
     public boolean isArmorActive() {

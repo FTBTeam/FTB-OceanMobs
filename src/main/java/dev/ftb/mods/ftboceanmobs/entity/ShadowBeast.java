@@ -168,7 +168,7 @@ public class ShadowBeast extends Monster implements GeoEntity {
         public void tick() {
             shadowBeast.roarWarmupTick--;
             if (shadowBeast.roarWarmupTick == 16) {
-                shadowBeast.level().playSound(null, shadowBeast.blockPosition(), SoundEvents.WARDEN_ROAR, SoundSource.HOSTILE, 1f, 1.5f + shadowBeast.getRandom().nextFloat() * 0.5f);
+                shadowBeast.playSound(SoundEvents.WARDEN_ROAR, 1f,1.5f + shadowBeast.getRandom().nextFloat() * 0.5f);
             } else if (shadowBeast.roarWarmupTick == 10) {
                 shadowBeast.level().getNearbyEntities(Player.class, TargetingConditions.DEFAULT, shadowBeast, shadowBeast.getBoundingBox().inflate(16.0))
                         .forEach(player -> {

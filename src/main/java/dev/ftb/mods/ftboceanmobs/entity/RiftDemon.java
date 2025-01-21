@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -21,6 +22,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -92,7 +94,7 @@ public class RiftDemon extends Monster implements GeoEntity {
     protected void blockUsingShield(LivingEntity attacker) {
         attacker.hurt(level().damageSources().hotFloor(), 8f);
         attacker.igniteForTicks(30);
-        attacker.level().playSound(null, blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.HOSTILE, 1f, 1f);
+        playSound(SoundEvents.SHIELD_BLOCK, 1f, 1f);
     }
 
     private PlayState attackState(AnimationState<RiftDemon> state) {
@@ -150,6 +152,16 @@ public class RiftDemon extends Monster implements GeoEntity {
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        playSound(SoundEvents.PIGLIN_BRUTE_STEP, 1f, 0.75f);
+    }
+
+    @Override
+    protected float nextStep() {
+        return moveDist + 1.2f;
     }
 
     private boolean couldBlock() {

@@ -126,7 +126,7 @@ public class RiftlingObserver extends Monster implements GeoEntity {
         } else {
             boolean potion = source.getDirectEntity() instanceof ThrownPotion;
             if (!source.is(DamageTypeTags.IS_PROJECTILE) && !potion) {
-                if (!this.level().isClientSide() && this.random.nextInt(3) != 0) {
+                if (!this.level().isClientSide() && this.random.nextInt(3) == 0) {
                     this.teleport();
                     return false;
                 }
@@ -345,7 +345,7 @@ public class RiftlingObserver extends Monster implements GeoEntity {
             } else if (chargeTime == ATTACK_TIME) {
                 observer.lastGazeTime = observer.level().getGameTime();
 
-                observer.level().playSound(null, observer.blockPosition(), SoundEvents.EVOKER_CAST_SPELL, SoundSource.HOSTILE, 1f, 1f);
+                observer.playSound(SoundEvents.EVOKER_CAST_SPELL, 1f, 1f);
 
                 if (target != null && target.isAlive() && MiscUtil.isLookingAtMe(observer, target, GAZE_MIN_ANGLE)) {
                     observer.level().playSound(null, target.blockPosition(), SoundEvents.EVOKER_CAST_SPELL, SoundSource.HOSTILE, 1f, 1f);

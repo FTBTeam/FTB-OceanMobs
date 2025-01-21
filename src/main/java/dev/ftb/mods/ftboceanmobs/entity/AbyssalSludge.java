@@ -6,6 +6,8 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -22,6 +24,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -109,6 +112,20 @@ public class AbyssalSludge extends Monster implements GeoEntity {
         return cache;
     }
 
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        if (level().random.nextBoolean()) {
+            playSound(SoundEvents.SLIME_SQUISH, 1.0F, 0.75F);
+        } else {
+            playSound(SoundEvents.SLIME_JUMP, 1.0F, 1F);
+        }
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return SoundEvents.SLIME_DEATH;
+    }
+
     private static class ThrowSludgeGoal extends Goal {
         private static final int SLUDGE_WARMUP_TICKS = 24;
         private static final TargetingConditions SLIME_COUNT_TARGETING
@@ -172,6 +189,7 @@ public class AbyssalSludge extends Monster implements GeoEntity {
                     sludgeling.setHealth(sludgeling.getMaxHealth());
                     serverLevel.addFreshEntityWithPassengers(sludgeling);
                     serverLevel.gameEvent(GameEvent.ENTITY_PLACE, BlockPos.containing(pos), GameEvent.Context.of(abyssalSludge));
+                    abyssalSludge.playSound(SoundEvents.SLIME_BLOCK_HIT, 1f, 0.5f);
                 }
             }
         }

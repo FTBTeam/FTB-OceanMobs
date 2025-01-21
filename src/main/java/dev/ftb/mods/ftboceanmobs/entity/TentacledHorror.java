@@ -430,17 +430,18 @@ public class TentacledHorror extends Monster implements GeoEntity {
                 // trigger client to play spray particles
                 horror.entityData.set(DATA_INK_SPRAY, true);
             } else if (tickCounter == 6) {
-                inkTarget = inkTarget.lerp(target.position(), 0.5);
+                inkTarget = inkTarget.lerp(target.position(), 0.7);
                 AreaEffectCloud cloud = new AreaEffectCloud(target.level(), inkTarget.x, inkTarget.y, inkTarget.z);
                 cloud.setPotionContents(new PotionContents(Optional.empty(), Optional.of(0xFF000000), List.of()));
                 cloud.setOwner(horror);
                 cloud.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 0));
+                cloud.addEffect(new MobEffectInstance(MobEffects.WITHER, 40, 0));
                 cloud.setRadius(4.0f);
                 cloud.setDuration(150);
                 cloud.setRadiusOnUse(-0.5f);
                 cloud.setWaitTime(20);
                 cloud.setRadiusPerTick(-cloud.getRadius() / cloud.getDuration());
-                horror.level().playSound(null, BlockPos.containing(inkTarget), SoundEvents.SLIME_JUMP, SoundSource.HOSTILE);
+                horror.level().playSound(null, BlockPos.containing(inkTarget), SoundEvents.SLIME_JUMP, SoundSource.HOSTILE, 1f, 0.6f);
                 horror.level().addFreshEntity(cloud);
             }
         }
