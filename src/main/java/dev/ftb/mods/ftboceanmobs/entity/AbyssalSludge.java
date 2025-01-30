@@ -19,6 +19,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Slime;
@@ -54,6 +56,7 @@ public class AbyssalSludge extends Monster implements GeoEntity {
                 .add(Attributes.ARMOR, 8F)
                 .add(Attributes.ARMOR_TOUGHNESS, 6F)
                 .add(Attributes.FOLLOW_RANGE, 42F)
+                .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.33333333F)
                 .add(Attributes.ATTACK_DAMAGE, 9.0);
     }
 
@@ -74,6 +77,11 @@ public class AbyssalSludge extends Monster implements GeoEntity {
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new AmphibiousPathNavigation(this, level);
     }
 
     @Override

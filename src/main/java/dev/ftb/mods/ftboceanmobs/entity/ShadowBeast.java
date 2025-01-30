@@ -5,7 +5,6 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -48,6 +47,7 @@ public class ShadowBeast extends Monster implements GeoEntity {
                 .add(Attributes.ARMOR, 6F)
                 .add(Attributes.ARMOR_TOUGHNESS, 4F)
                 .add(Attributes.FOLLOW_RANGE, 48F)
+                .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.33333333F)
                 .add(Attributes.ATTACK_DAMAGE, 7.0);
     }
 

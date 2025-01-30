@@ -63,6 +63,7 @@ public class RiftMinotaur extends Monster implements GeoEntity, IChargingMob, IT
                 .add(Attributes.FOLLOW_RANGE, 36F)
                 .add(Attributes.STEP_HEIGHT, 1.5F)
                 .add(Attributes.ATTACK_KNOCKBACK, 2.5F)
+                .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.33333333F)
                 .add(Attributes.ATTACK_DAMAGE, 12.0);
     }
 

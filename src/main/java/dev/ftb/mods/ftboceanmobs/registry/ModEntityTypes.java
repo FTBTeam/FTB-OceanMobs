@@ -105,7 +105,7 @@ public class ModEntityTypes {
 
     private static EntityType.Builder<RiftDemon> riftDemon() {
         return EntityType.Builder.of(RiftDemon::new, MobCategory.MONSTER)
-                .sized(1.75F, 3.75F)
+                .sized(1.7F, 3.75F)
                 .eyeHeight(3.4F)
                 .clientTrackingRange(10)
                 .fireImmune();

@@ -19,6 +19,7 @@ import net.minecraft.util.ByIdMap;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
@@ -30,7 +31,7 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
@@ -82,6 +83,7 @@ public class TentacledHorror extends Monster implements GeoEntity {
                 .add(Attributes.ARMOR_TOUGHNESS, 2F)
                 .add(Attributes.FOLLOW_RANGE, 48F)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.75F)
+                .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.33333333F)
                 .add(Attributes.ATTACK_DAMAGE, 8.0);
     }
 
@@ -91,7 +93,7 @@ public class TentacledHorror extends Monster implements GeoEntity {
 
     @Override
     protected PathNavigation createNavigation(Level level) {
-        return new GroundPathNavigation(this, level) {
+        return new AmphibiousPathNavigation(this, level) {
             @Override
             protected PathFinder createPathFinder(int maxVisitedNodes) {
                 this.nodeEvaluator = new WalkNodeEvaluator();
@@ -174,6 +176,11 @@ public class TentacledHorror extends Monster implements GeoEntity {
                 clientSideCachedAttackTarget = null;
             }
         }
+    }
+
+    @Override
+    public boolean isInvulnerableTo(DamageSource source) {
+        return super.isInvulnerableTo(source) || source.is(DamageTypes.WITHER);
     }
 
     @Override

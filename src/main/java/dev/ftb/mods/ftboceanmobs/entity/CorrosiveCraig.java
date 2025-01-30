@@ -20,6 +20,8 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -63,6 +65,7 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
                 .add(Attributes.ARMOR_TOUGHNESS, 10F)
                 .add(Attributes.FOLLOW_RANGE, 36F)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
+                .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.33333333F)
                 .add(Attributes.ATTACK_DAMAGE, 15.0);
     }
 
@@ -75,6 +78,11 @@ public class CorrosiveCraig extends Monster implements GeoEntity {
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new AmphibiousPathNavigation(this, level);
     }
 
     @Override
