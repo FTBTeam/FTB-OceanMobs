@@ -5,6 +5,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.level.Level;
@@ -43,5 +44,14 @@ public class Sludgeling extends Slime {
     @Override
     protected ParticleOptions getParticleType() {
         return ModParticleTypes.SLUDGE.get();
+    }
+
+    @Override
+    protected void customServerAiStep() {
+        if (tickCount % 40 == 0) {
+            if (level().getNearbyEntities(AbyssalSludge.class, TargetingConditions.DEFAULT.ignoreLineOfSight(), this, getBoundingBox().inflate(32)).isEmpty()) {
+                kill();
+            }
+        }
     }
 }
