@@ -1,10 +1,7 @@
 package dev.ftb.mods.ftboceanmobs.datagen;
 
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
-import dev.ftb.mods.ftboceanmobs.registry.ModBlocks;
-import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
-import dev.ftb.mods.ftboceanmobs.registry.ModItems;
-import dev.ftb.mods.ftboceanmobs.registry.ModMobEffects;
+import dev.ftb.mods.ftboceanmobs.registry.*;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -38,6 +35,8 @@ public class ModLangProvider extends LanguageProvider {
         addBlock(ModBlocks.SLUDGE_BLOCK, "Sludge Block");
 
         addEffect(ModMobEffects.DROWNING_SHADOWS_EFFECT, "Drowning Shadows");
+
+        add(ModFluids.ABYSSAL_WATER_TYPE.get().getDescriptionId(), "Abyssal Water");
 
         add("ftboceanmobs.itemGroup.tab", "FTB Ocean Mobs");
         add("enchantment.ftboceanmobs.rift_disruptor", "Rift Disruptor");
