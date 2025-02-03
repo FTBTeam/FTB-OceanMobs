@@ -19,7 +19,6 @@ import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.constant.DefaultAnimations;
@@ -27,7 +26,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.EnumSet;
 
-public class ShadowBeast extends Monster implements GeoEntity {
+public class ShadowBeast extends BaseRiftMob {
     private static final RawAnimation ANIM_ATTACK_ROAR = RawAnimation.begin().thenPlay("attack.roar");
 
     protected static final EntityDataAccessor<Boolean> DATA_ROAR_WARMUP = SynchedEntityData.defineId(ShadowBeast.class, EntityDataSerializers.BOOLEAN);
@@ -63,7 +62,7 @@ public class ShadowBeast extends Monster implements GeoEntity {
         this.goalSelector.addGoal(1, new ShadowRoarGoal(this));
         this.goalSelector.addGoal(2, new LeapAtTargetGoal(this, 0.42F));
         this.goalSelector.addGoal(3, new DelayedMeleeAttackGoal(this, 1.0, false, 12));
-        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0));
+        this.goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 

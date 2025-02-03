@@ -3,7 +3,6 @@ package dev.ftb.mods.ftboceanmobs;
 import com.mojang.logging.LogUtils;
 import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
 import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
-import dev.ftb.mods.ftboceanmobs.datagen.ModTagsProvider;
 import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
 import dev.ftb.mods.ftboceanmobs.registry.*;
@@ -17,13 +16,11 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
 @Mod(FTBOceanMobs.MODID)
@@ -42,7 +39,6 @@ public class FTBOceanMobs {
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
         modEventBus.addListener(DataGenerators::gatherData);
-        modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::addSpawnEggsToCreativeTab);
         modEventBus.addListener(this::registerEntityAttributes);
 
@@ -79,10 +75,6 @@ public class FTBOceanMobs {
         ModFluids.FLUIDS.register(modBus);
         ModFluids.FLUID_TYPES.register(modBus);
         ModMobEffects.MOB_EFFECTS.register(modBus);
-    }
-
-    private void commonSetup(final FMLCommonSetupEvent event) {
-        LOGGER.info("HELLO FROM COMMON SETUP");
     }
 
     private void addSpawnEggsToCreativeTab(BuildCreativeModeTabContentsEvent event) {

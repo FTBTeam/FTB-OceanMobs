@@ -8,24 +8,22 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
-import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.constant.DefaultAnimations;
@@ -34,7 +32,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import java.util.EnumSet;
 import java.util.function.Function;
 
-public class RiftDemon extends Monster implements GeoEntity {
+public class RiftDemon extends BaseRiftMob {
     private static final RawAnimation ANIM_ATTACK_GLARE = RawAnimation.begin().thenPlay("attack.glare");
 
     protected static final EntityDataAccessor<Byte> DATA_STATE = SynchedEntityData.defineId(RiftDemon.class, EntityDataSerializers.BYTE);
@@ -65,17 +63,12 @@ public class RiftDemon extends Monster implements GeoEntity {
         goalSelector.addGoal(1, new GlareGoal(this));
         goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.3, false, 18));
 
-        goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0));
+        goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
         targetSelector.addGoal(1, new HurtByTargetGoal(this));
         targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
-    }
-
-    @Override
-    protected PathNavigation createNavigation(Level level) {
-        return new AmphibiousPathNavigation(this, level);
     }
 
     @Override
@@ -273,12 +266,12 @@ public class RiftDemon extends Monster implements GeoEntity {
         }
 
         private void addLightning(LivingEntity entity, boolean visual, Vec3 offset) {
-//            LightningBolt lightningbolt = EntityType.LIGHTNING_BOLT.create(entity.level());
-//            if (lightningbolt != null) {
-//                lightningbolt.moveTo(Vec3.atBottomCenterOf(entity.blockPosition()).add(offset));
-//                lightningbolt.setVisualOnly(visual);
-//                entity.level().addFreshEntity(lightningbolt);
-//            }
+            LightningBolt lightningbolt = EntityType.LIGHTNING_BOLT.create(entity.level());
+            if (lightningbolt != null) {
+                lightningbolt.moveTo(Vec3.atBottomCenterOf(entity.blockPosition()).add(offset));
+                lightningbolt.setVisualOnly(visual);
+                entity.level().addFreshEntity(lightningbolt);
+            }
         }
     }
 }
