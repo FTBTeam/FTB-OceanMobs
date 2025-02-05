@@ -43,7 +43,7 @@ public class ShadowBeast extends BaseRiftMob {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.45F)
                 .add(Attributes.MAX_HEALTH, 30.0)
-                .add(Attributes.ARMOR, 6F)
+                .add(Attributes.ARMOR, 2F)
                 .add(Attributes.ARMOR_TOUGHNESS, 4F)
                 .add(Attributes.FOLLOW_RANGE, 48F)
                 .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.33333333F)
