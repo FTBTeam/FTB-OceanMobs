@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -9,6 +10,7 @@ import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.pathfinder.PathType;
 import software.bernie.geckolib.animatable.GeoEntity;
 
@@ -23,6 +25,17 @@ public abstract class BaseRiftMob extends Monster implements GeoEntity {
     @Override
     protected PathNavigation createNavigation(Level level) {
         return new AmphibiousPathNavigation(this, level);
+    }
+
+    @Override
+    public boolean checkSpawnObstruction(LevelReader level) {
+        // all rift mobs can spawn in water
+        return level.isUnobstructed(this);
+    }
+
+    @Override
+    public float getWalkTargetValue(BlockPos pos, LevelReader level) {
+        return 0f;
     }
 
     protected boolean wantsToSwim() {
