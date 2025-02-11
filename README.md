@@ -8,7 +8,9 @@ None of the mobs in this mod drop any loot by default; it is intended for pack m
 
 None of the mobs spawn naturally by default; again, it is intended for pack makers to adjust spawning rules and/or provide other means such as spawners or command blocks to spawn them.
 
-[GeckoLib](https://www.curseforge.com/minecraft/mc-mods/geckolib) is a required dependency.
+## Requirements
+
+- [GeckoLib](https://www.curseforge.com/minecraft/mc-mods/geckolib) is a required dependency
 
 ## Support
 
