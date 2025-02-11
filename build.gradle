@@ -223,8 +223,8 @@ publishMods {
 
     def createOptions = (String projectName) -> {
         publishOptions {
-            file = jar.archiveFile //project.provider { project(":$projectName").tasks.remapJar }.flatMap { it.archiveFile }
-            displayName = "[${projectName.toUpperCase()}][${minecraft_version}] ${mod_name} ${mod_version}"
+            file = jar.archiveFile
+            displayName = "[${projectName.toUpperCase()}] ${mod_name} ${mod_version}"
             modLoaders.add(projectName.toLowerCase())
         }
     }
