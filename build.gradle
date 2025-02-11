@@ -2,7 +2,10 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'net.neoforged.moddev' version '1.0.17'
+    id "me.modmuss50.mod-publish-plugin" version "0.7.2"
 }
+
+apply from: 'https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/changelog.gradle'
 
 tasks.named('wrapper', Wrapper).configure {
     // Define wrapper values here so as to not have to always do so when updating gradlew.properties.
@@ -208,6 +211,38 @@ publishing {
             }
         }
     }
+}
+
+publishMods {
+    dryRun = providers.environmentVariable("CURSEFORGE_KEY").getOrNull() == null
+    changelog = createChangelog(project)
+    version = mod_version
+
+    def tag = providers.environmentVariable("TAG").getOrElse("release")
+    type = tag.endsWith("-beta") ? BETA : (tag.endsWith("-alpha") ? ALPHA : STABLE)
+
+    def createOptions = (String projectName) -> {
+        publishOptions {
+            file = jar.archiveFile //project.provider { project(":$projectName").tasks.remapJar }.flatMap { it.archiveFile }
+            displayName = "[${projectName.toUpperCase()}][${minecraft_version}] ${mod_name} ${mod_version}"
+            modLoaders.add(projectName.toLowerCase())
+        }
+    }
+
+    def neoForgeOptions = createOptions("neoforge")
+
+    def curseForgeOptions = curseforgeOptions {
+        accessToken = providers.environmentVariable("CURSEFORGE_KEY")
+        minecraftVersions.add("${minecraft_version}")
+        javaVersions.add(JavaVersion.VERSION_21)
+    }
+
+    curseforge("curseforgeNeoForge") {
+        from(curseForgeOptions, neoForgeOptions)
+        projectId = curseforge_id
+        requires('geckolib')
+    }
+
 }
 
 tasks.withType(JavaCompile).configureEach {
