@@ -1,6 +1,7 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -27,6 +28,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.constant.DefaultAnimations;
@@ -124,6 +126,11 @@ public class AbyssalSludge extends BaseRiftMob {
     @Override
     protected SoundEvent getDeathSound() {
         return SoundEvents.SLIME_DEATH;
+    }
+
+    @Override
+    protected @Nullable SoundEvent getAmbientSound() {
+        return ModSounds.ABYSSAL_SLUDGE_AMBIENT.get();
     }
 
     private static class ThrowSludgeGoal extends Goal {

@@ -4,6 +4,7 @@ import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobsTags;
 import dev.ftb.mods.ftboceanmobs.mobai.RandomAttackableTargetGoal;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -16,6 +17,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
@@ -44,6 +46,7 @@ import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -98,7 +101,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     private final RiftWeaverPart arm1;
     private final RiftWeaverPart arm2;
 
-    private int fightPhase; // 0..3 based on health (does not tick backward)
+    private int fightPhase = -1; // -1..3 based on health (does not tick backward; -1 means newly spawned)
     private RiftWeaverMode currentMode = RiftWeaverModes.HOLD_POSITION;
     private RiftWeaverMode lastMode = RiftWeaverModes.HOLD_POSITION;
     private RiftWeaverMode queuedMode = null;  // next special mode to go into, only from hold/roam modes
@@ -267,6 +270,21 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         positionSubparts();
     }
 
+    @Override
+    protected SoundEvent getDeathSound() {
+        return ModSounds.RIFT_WEAVER_DEATH.get();
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource damageSource) {
+        return ModSounds.RIFT_WEAVER_HURT.get();
+    }
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return ModSounds.RIFT_WEAVER_AMBIENT.get();
+    }
+
     private double fudge(double val, double amount) {
         return val + random.nextDouble() * amount - amount / 2.0;
     }
@@ -337,8 +355,29 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
 
     @Override
     protected void customServerAiStep() {
+        if (fightPhase == -1) {
+            playSound(ModSounds.RIFT_WEAVER_SUMMON.get());
+            fightPhase = 0;
+        }
+
+        if (tickCount % 20 == 0 && getHealth() < getMaxHealth()) {
+            // fast health regen if no player in arena (we allow creative mode players though)
+            Vec3 spawn = Vec3.atCenterOf(spawnPos);
+            AABB aabb = new AABB(blockPosition()).inflate(Config.arenaRadius);
+            boolean playerPresent = level().getNearbyPlayers(TargetingConditions.forNonCombat(), this, aabb).stream()
+                    .anyMatch(p -> p.distanceToSqr(spawn) < Config.arenaRadiusSq);
+            if (!playerPresent) {
+                setHealth(Math.min(getMaxHealth(), getHealth() + 20f));
+            }
+        }
+
+        if (getEyePosition().y - 5 < level().getHeight(Heightmap.Types.WORLD_SURFACE, blockPosition().getX(), blockPosition().getZ())) {
+            // boss sometimes clips too far into the ground
+            moveTo(position().x, position().y + 2, position().z);
+        }
+
         if (!hasRestriction()) {
-            // anchorPos == null: newly spawned
+            // spawnPos == null: newly spawned
             // non-null: loaded from NBT
             if (spawnPos == null) {
                 spawnPos = blockPosition();
@@ -464,7 +503,9 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             fightPhase = phase;
             forceQueueMode(RiftWeaverModes.TIDAL_SURGE);
             armorDurability = 20f;
-            setArmorActive(true);
+            if (getHealth() > 0f) {
+                setArmorActive(true);
+            }
         }
     }
 

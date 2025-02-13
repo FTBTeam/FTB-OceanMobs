@@ -21,6 +21,12 @@ public class CorrosiveCraigRenderer extends GeoEntityRenderer<CorrosiveCraig> {
         addRenderLayer(new FlameLayer());
     }
 
+    @Override
+    public float getMotionAnimThreshold(CorrosiveCraig animatable) {
+        // this mob is slow, needs a lower threshold than normal
+        return 0.005f;
+    }
+
     public static CorrosiveCraigRenderer scaled(EntityRendererProvider.Context renderManager, float scale) {
         return (CorrosiveCraigRenderer) new CorrosiveCraigRenderer(renderManager).withScale(scale);
     }

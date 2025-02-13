@@ -1,10 +1,12 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -159,6 +161,16 @@ public class RiftDemon extends BaseRiftMob {
     }
 
     @Override
+    public void playDelayedAttackSound() {
+        playSound(ModSounds.RIFT_DEMON_ATTACK.get());
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return ModSounds.RIFT_DEMON_DEATH.get();
+    }
+
+    @Override
     protected float nextStep() {
         return moveDist + 1.2f;
     }
@@ -241,6 +253,12 @@ public class RiftDemon extends BaseRiftMob {
                     riftDemon::setShieldUp
             );
         }
+
+        @Override
+        public void start() {
+            super.start();
+            riftDemon.playSound(ModSounds.RIFT_DEMON_SHIELD.get(), 1.2f, 1f);
+        }
     }
 
     public static class GlareGoal extends AnimatedActionGoal {
@@ -249,6 +267,12 @@ public class RiftDemon extends BaseRiftMob {
                     d -> d.random.nextInt(80) == 0 && d.checkGlareDist(),
                     riftDemon::setGlaring
             );
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            riftDemon.playSound(ModSounds.RIFT_DEMON_LIGHTNING.get());
         }
 
         @Override

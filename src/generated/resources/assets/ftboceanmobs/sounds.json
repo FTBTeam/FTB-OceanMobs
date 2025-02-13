@@ -1,14 +1,192 @@
 {
-  "minotaur_idle": {
+  "abyssal_sludge_ambient": {
     "sounds": [
-      "ftboceanmobs:minotaur_idle"
+      "ftboceanmobs:abyssal_sludge_ambient"
     ],
-    "subtitle": "ftboceanmobs.subtitle.minotaur_grunt"
+    "subtitle": "ftboceanmobs.subtitle.abyssal_sludge_ambient"
   },
-  "tentacle_squish": {
+  "abyssal_winged_ambient": {
     "sounds": [
-      "ftboceanmobs:tentacle_squish"
+      "ftboceanmobs:abyssal_winged_ambient"
     ],
-    "subtitle": "ftboceanmobs.subtitle.squish"
+    "subtitle": "ftboceanmobs.subtitle.abyssal_winged_ambient"
+  },
+  "abyssal_winged_death": {
+    "sounds": [
+      "ftboceanmobs:abyssal_winged_death"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.abyssal_winged_death"
+  },
+  "corrosive_craig_attack": {
+    "sounds": [
+      "ftboceanmobs:corrosive_craig_attack"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.corrosive_craig_attack"
+  },
+  "corrosive_craig_death": {
+    "sounds": [
+      "ftboceanmobs:corrosive_craig_death"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.corrosive_craig_death"
+  },
+  "minotaur_ambient": {
+    "sounds": [
+      "ftboceanmobs:minotaur_ambient"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.minotaur_ambient"
+  },
+  "mossback_goliath_death": {
+    "sounds": [
+      "ftboceanmobs:mossback_goliath_death"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.mossback_goliath_death"
+  },
+  "rift_demon_attack": {
+    "sounds": [
+      "ftboceanmobs:rift_demon_attack"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_demon_attack"
+  },
+  "rift_demon_death": {
+    "sounds": [
+      "ftboceanmobs:rift_demon_death"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_demon_death"
+  },
+  "rift_demon_lightning": {
+    "sounds": [
+      "ftboceanmobs:rift_demon_lightning"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_demon_lightning"
+  },
+  "rift_demon_shield": {
+    "sounds": [
+      "ftboceanmobs:rift_demon_shield"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_demon_shield"
+  },
+  "rift_weaver_ambient": {
+    "sounds": [
+      {
+        "name": "ftboceanmobs:rift_weaver_ambient1",
+        "stream": true
+      },
+      {
+        "name": "ftboceanmobs:rift_weaver_ambient2",
+        "stream": true
+      }
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_weaver_ambient"
+  },
+  "rift_weaver_attack": {
+    "sounds": [
+      "ftboceanmobs:rift_weaver_attack"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_weaver_attack"
+  },
+  "rift_weaver_death": {
+    "sounds": [
+      {
+        "attenuation_distance": 64,
+        "name": "ftboceanmobs:rift_weaver_death",
+        "stream": true
+      }
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_weaver_death"
+  },
+  "rift_weaver_hurt": {
+    "sounds": [
+      "ftboceanmobs:rift_weaver_hurt"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_weaver_hurt"
+  },
+  "rift_weaver_summon": {
+    "sounds": [
+      {
+        "attenuation_distance": 64,
+        "name": "ftboceanmobs:rift_weaver_summon",
+        "stream": true
+      }
+    ],
+    "subtitle": "ftboceanmobs.subtitle.rift_weaver_summon"
+  },
+  "riftling_observer_ambient": {
+    "sounds": [
+      "ftboceanmobs:riftling_observer_ambient"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.riftling_observer_ambient"
+  },
+  "riftling_observer_death": {
+    "sounds": [
+      "ftboceanmobs:riftling_observer_death"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.riftling_observer_death"
+  },
+  "shadowbeast_ambient": {
+    "sounds": [
+      "ftboceanmobs:shadowbeast_ambient"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.shadowbeast_ambient"
+  },
+  "shadowbeast_attack": {
+    "sounds": [
+      "ftboceanmobs:shadowbeast_attack"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.shadowbeast_attack"
+  },
+  "shadowbeast_death": {
+    "sounds": [
+      "ftboceanmobs:shadowbeast_death"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.shadowbeast_death"
+  },
+  "shadowbeast_roar": {
+    "sounds": [
+      {
+        "name": "ftboceanmobs:shadowbeast_attack",
+        "pitch": 0.5,
+        "volume": 1.25
+      }
+    ],
+    "subtitle": "ftboceanmobs.subtitle.shadowbeast_roar"
+  },
+  "tentacled_horror_ambient": {
+    "sounds": [
+      "ftboceanmobs:tentacled_horror_ambient"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.tentacled_horror_ambient"
+  },
+  "tentacled_horror_death": {
+    "sounds": [
+      "ftboceanmobs:tentacled_horror_death"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.tentacled_horror_death"
+  },
+  "tentacled_horror_hurt": {
+    "sounds": [
+      "ftboceanmobs:tentacled_horror_hurt"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.tentacled_horror_hurt"
+  },
+  "tentacled_horror_squeeze": {
+    "sounds": [
+      {
+        "name": "ftboceanmobs:tentacled_horror_squeeze",
+        "stream": true
+      }
+    ],
+    "subtitle": "ftboceanmobs.subtitle.tentacled_horror_squeeze"
+  },
+  "tentacled_horror_step": {
+    "sounds": [
+      "ftboceanmobs:tentacled_horror_step"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.tentacled_horror_step"
+  },
+  "tentacled_horror_throw": {
+    "sounds": [
+      "ftboceanmobs:tentacled_horror_throw"
+    ],
+    "subtitle": "ftboceanmobs.subtitle.tentacled_horror_throw"
   }
 }

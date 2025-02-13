@@ -40,8 +40,35 @@ public class ModLangProvider extends LanguageProvider {
 
         add("ftboceanmobs.itemGroup.tab", "FTB Ocean Mobs");
         add("enchantment.ftboceanmobs.rift_disruptor", "Rift Disruptor");
-        add("ftboceanmobs.subtitles.minotaur_grunts", "Grunting noise");
-        add("ftboceanmobs.subtitles.tentacle_squish", "Squishing sounds");
+
+        add("ftboceanmobs.subtitle.abyssal_sludge_ambient", "Sludgy squishing noises");
+        add("ftboceanmobs.subtitle.abyssal_winged_ambient", "Abyssal Winged shrieks");
+        add("ftboceanmobs.subtitle.abyssal_winged_death", "Abyssal Winged dies");
+        add("ftboceanmobs.subtitle.corrosive_craig_attack", "Corrosive Craig attacks");
+        add("ftboceanmobs.subtitle.corrosive_craig_death", "Corrosive Craig dies");
+        add("ftboceanmobs.subtitle.minotaur_ambient", "Rift Minotaur grunts");
+        add("ftboceanmobs.subtitle.mossback_goliath_death", "Mossback Goliath dies");
+        add("ftboceanmobs.subtitle.rift_demon_attack", "Rift Demon attacks");
+        add("ftboceanmobs.subtitle.rift_demon_death", "Rift Demon dies");
+        add("ftboceanmobs.subtitle.rift_demon_lightning", "Rift Demon calls lightning");
+        add("ftboceanmobs.subtitle.rift_demon_shield", "Rift Demon raises shield");
+        add("ftboceanmobs.subtitle.rift_weaver_ambient", "Rift Weaver howls");
+        add("ftboceanmobs.subtitle.rift_weaver_attack", "Rift Weaver attacks");
+        add("ftboceanmobs.subtitle.rift_weaver_death", "Rift Weaver dies");
+        add("ftboceanmobs.subtitle.rift_weaver_hurt", "Rift Weaver hurts");
+        add("ftboceanmobs.subtitle.rift_weaver_summon", "Rift Weaver released");
+        add("ftboceanmobs.subtitle.riftling_observer_ambient", "Riftling Observer mutters");
+        add("ftboceanmobs.subtitle.riftling_observer_death", "Riftling Observer dies");
+        add("ftboceanmobs.subtitle.shadowbeast_ambient", "Shadow Beast gibbers");
+        add("ftboceanmobs.subtitle.shadowbeast_attack", "Shadow Beast attacks");
+        add("ftboceanmobs.subtitle.shadowbeast_death", "Shadow Beast dies");
+        add("ftboceanmobs.subtitle.shadowbeast_roar", "Shadow Beast roars");
+        add("ftboceanmobs.subtitle.tentacled_horror_ambient", "Tentacled Horror growls");
+        add("ftboceanmobs.subtitle.tentacled_horror_death", "Tentacled Horror dies");
+        add("ftboceanmobs.subtitle.tentacled_horror_hurt", "Tentacled Horror hurts");
+        add("ftboceanmobs.subtitle.tentacled_horror_squeeze", "Tentacles squeeze");
+        add("ftboceanmobs.subtitle.tentacled_horror_step", "Tentacled Horror steps");
+        add("ftboceanmobs.subtitle.tentacled_horror_throw", "Tentacled Horror throws player");
     }
 
     private void addEntityAndEgg(EntityType<? extends Entity> entityType, Item spawnEgg, String translation) {

@@ -132,7 +132,7 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
 
     @Override
     protected @Nullable SoundEvent getAmbientSound() {
-        return ModSounds.MINOTAUR_IDLE.get();
+        return ModSounds.MINOTAUR_AMBIENT.get();
     }
 
     @Override

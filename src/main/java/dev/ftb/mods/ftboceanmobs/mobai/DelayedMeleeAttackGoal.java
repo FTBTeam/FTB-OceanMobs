@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.mobai;
 
+import dev.ftb.mods.ftboceanmobs.entity.BaseRiftMob;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
@@ -35,6 +36,7 @@ public class DelayedMeleeAttackGoal extends MeleeAttackGoal {
             QueuedAttack next = queuedAttacks.peekFirst();
             if (next.when <= mob.tickCount) {
                 queuedAttacks.removeFirst();
+                if (mob instanceof BaseRiftMob b) b.playDelayedAttackSound();
                 if (next.target.isAlive() && mob.isWithinMeleeAttackRange(next.target)) {
                     mob.doHurtTarget(next.target);
                 }

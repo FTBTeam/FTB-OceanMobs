@@ -1,10 +1,11 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -19,6 +20,7 @@ import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.constant.DefaultAnimations;
@@ -111,6 +113,21 @@ public class ShadowBeast extends BaseRiftMob {
     }
 
     @Override
+    protected @Nullable SoundEvent getAmbientSound() {
+        return ModSounds.SHADOWBEAST_AMBIENT.get();
+    }
+
+    @Override
+    public void playDelayedAttackSound() {
+        playSound(ModSounds.SHADOWBEAST_ATTACK.get());
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return ModSounds.SHADOWBEAST_DEATH.get();
+    }
+
+    @Override
     public boolean doHurtTarget(Entity entity) {
         if (entity instanceof LivingEntity livingEntity && super.doHurtTarget(entity)) {
             if (entity.getRandom().nextInt(6) == 0) {
@@ -167,7 +184,7 @@ public class ShadowBeast extends BaseRiftMob {
         public void tick() {
             shadowBeast.roarWarmupTick--;
             if (shadowBeast.roarWarmupTick == 16) {
-                shadowBeast.playSound(SoundEvents.WARDEN_ROAR, 1f,1.5f + shadowBeast.getRandom().nextFloat() * 0.5f);
+                shadowBeast.playSound(ModSounds.SHADOWBEAST_ROAR.get(), 1f,0.5f);
             } else if (shadowBeast.roarWarmupTick == 10) {
                 shadowBeast.level().getNearbyEntities(Player.class, TargetingConditions.DEFAULT, shadowBeast, shadowBeast.getBoundingBox().inflate(16.0))
                         .forEach(player -> {

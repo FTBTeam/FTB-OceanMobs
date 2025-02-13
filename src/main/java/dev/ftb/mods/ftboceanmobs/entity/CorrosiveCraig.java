@@ -1,12 +1,14 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -167,6 +169,16 @@ public class CorrosiveCraig extends BaseRiftMob {
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
         playSound(SoundEvents.IRON_GOLEM_STEP, 1.2F, 0.75F);
+    }
+
+    @Override
+    public void playDelayedAttackSound() {
+        playSound(ModSounds.CORROSIVE_CRAIG_ATTACK.get(), 1f, 0.8f + random.nextFloat() * 0.4f);
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return ModSounds.CORROSIVE_CRAIG_DEATH.get();
     }
 
     protected float nextStep() {

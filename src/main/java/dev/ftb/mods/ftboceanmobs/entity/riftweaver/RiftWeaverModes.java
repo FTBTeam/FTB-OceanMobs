@@ -2,6 +2,7 @@ package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
 import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.registry.ModFluids;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
@@ -112,6 +113,7 @@ public class RiftWeaverModes {
 
             if (modeTicksRemaining == 5) {
                 // hurt all targets in a wide area in front of the weaver
+                boss.playSound(ModSounds.RIFT_DEMON_ATTACK.get());
                 for (LivingEntity e : boss.level().getNearbyEntities(LivingEntity.class, RiftWeaverBoss.NOT_RIFT_MOBS, boss, new AABB(boss.blockPosition()).inflate(10))) {
                     if (MiscUtil.isLookingAtMe(e, boss, 0.9)) {
                         boss.doHurtTarget(e);
