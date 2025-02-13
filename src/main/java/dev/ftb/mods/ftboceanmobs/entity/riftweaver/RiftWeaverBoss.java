@@ -46,6 +46,7 @@ import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -360,6 +361,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         }
 
         if (tickCount % 20 == 0 && getHealth() < getMaxHealth()) {
+            // fast health regen if no player in arena (we allow creative mode players though)
             Vec3 spawn = Vec3.atCenterOf(spawnPos);
             AABB aabb = new AABB(blockPosition()).inflate(Config.arenaRadius);
             boolean playerPresent = level().getNearbyPlayers(TargetingConditions.forNonCombat(), this, aabb).stream()
@@ -367,6 +369,11 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             if (!playerPresent) {
                 setHealth(Math.min(getMaxHealth(), getHealth() + 20f));
             }
+        }
+
+        if (getEyePosition().y - 5 < level().getHeight(Heightmap.Types.WORLD_SURFACE, blockPosition().getX(), blockPosition().getZ())) {
+            // boss sometimes clips too far into the ground
+            moveTo(position().x, position().y + 2, position().z);
         }
 
         if (!hasRestriction()) {
@@ -496,7 +503,9 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             fightPhase = phase;
             forceQueueMode(RiftWeaverModes.TIDAL_SURGE);
             armorDurability = 20f;
-            setArmorActive(true);
+            if (getHealth() > 0f) {
+                setArmorActive(true);
+            }
         }
     }
 

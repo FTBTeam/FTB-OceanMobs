@@ -24,9 +24,9 @@ public class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> RIFTLING_OBSERVER_DEATH = register("riftling_observer_death");
     public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_WEAVER_AMBIENT = register("rift_weaver_ambient");
     public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_WEAVER_ATTACK = register("rift_weaver_attack");
-    public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_WEAVER_DEATH = register("rift_weaver_death");
+    public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_WEAVER_DEATH = registerFixed("rift_weaver_death", 64f);
     public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_WEAVER_HURT = register("rift_weaver_hurt");
-    public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_WEAVER_SUMMON = register("rift_weaver_summon");
+    public static final DeferredHolder<SoundEvent, SoundEvent> RIFT_WEAVER_SUMMON = registerFixed("rift_weaver_summon", 64f);
     public static final DeferredHolder<SoundEvent, SoundEvent> SHADOWBEAST_AMBIENT = register("shadowbeast_ambient");
     public static final DeferredHolder<SoundEvent, SoundEvent> SHADOWBEAST_ATTACK = register("shadowbeast_attack");
     public static final DeferredHolder<SoundEvent, SoundEvent> SHADOWBEAST_DEATH = register("shadowbeast_death");
@@ -41,5 +41,9 @@ public class ModSounds {
 
     private static DeferredHolder<SoundEvent,SoundEvent> register(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(FTBOceanMobs.id(name)));
+    }
+
+    private static DeferredHolder<SoundEvent,SoundEvent> registerFixed(String name, float range) {
+        return SOUNDS.register(name, () -> SoundEvent.createFixedRangeEvent(FTBOceanMobs.id(name), range));
     }
 }

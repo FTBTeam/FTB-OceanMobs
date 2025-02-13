@@ -61,13 +61,13 @@ public class ModSoundProvider extends SoundDefinitionsProvider {
                 .with(sound(FTBOceanMobs.id("rift_weaver_attack")))
                 .subtitle("ftboceanmobs.subtitle.rift_weaver_attack"));
         add(ModSounds.RIFT_WEAVER_DEATH, SoundDefinition.definition()
-                .with(sound(FTBOceanMobs.id("rift_weaver_death")).stream())
+                .with(sound(FTBOceanMobs.id("rift_weaver_death")).stream().attenuationDistance(64))
                 .subtitle("ftboceanmobs.subtitle.rift_weaver_death"));
         add(ModSounds.RIFT_WEAVER_HURT, SoundDefinition.definition()
                 .with(sound(FTBOceanMobs.id("rift_weaver_hurt")))
                 .subtitle("ftboceanmobs.subtitle.rift_weaver_hurt"));
         add(ModSounds.RIFT_WEAVER_SUMMON, SoundDefinition.definition()
-                .with(sound(FTBOceanMobs.id("rift_weaver_summon")).stream())
+                .with(sound(FTBOceanMobs.id("rift_weaver_summon")).stream().attenuationDistance(64))
                 .subtitle("ftboceanmobs.subtitle.rift_weaver_summon"));
         add(ModSounds.SHADOWBEAST_AMBIENT, SoundDefinition.definition()
                 .with(sound(FTBOceanMobs.id("shadowbeast_ambient")))

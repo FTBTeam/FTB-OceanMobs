@@ -87,6 +87,7 @@
   "rift_weaver_death": {
     "sounds": [
       {
+        "attenuation_distance": 64,
         "name": "ftboceanmobs:rift_weaver_death",
         "stream": true
       }
@@ -102,6 +103,7 @@
   "rift_weaver_summon": {
     "sounds": [
       {
+        "attenuation_distance": 64,
         "name": "ftboceanmobs:rift_weaver_summon",
         "stream": true
       }
