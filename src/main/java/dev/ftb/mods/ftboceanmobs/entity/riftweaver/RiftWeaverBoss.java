@@ -359,8 +359,18 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             fightPhase = 0;
         }
 
+        if (tickCount % 20 == 0 && getHealth() < getMaxHealth()) {
+            Vec3 spawn = Vec3.atCenterOf(spawnPos);
+            AABB aabb = new AABB(blockPosition()).inflate(Config.arenaRadius);
+            boolean playerPresent = level().getNearbyPlayers(TargetingConditions.forNonCombat(), this, aabb).stream()
+                    .anyMatch(p -> p.distanceToSqr(spawn) < Config.arenaRadiusSq);
+            if (!playerPresent) {
+                setHealth(Math.min(getMaxHealth(), getHealth() + 20f));
+            }
+        }
+
         if (!hasRestriction()) {
-            // anchorPos == null: newly spawned
+            // spawnPos == null: newly spawned
             // non-null: loaded from NBT
             if (spawnPos == null) {
                 spawnPos = blockPosition();
