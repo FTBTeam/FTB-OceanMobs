@@ -37,6 +37,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
@@ -232,7 +233,22 @@ public class TentacledHorror extends BaseRiftMob {
 
     @Override
     protected @Nullable SoundEvent getAmbientSound() {
-        return ModSounds.TENTACLE_SQUISH.get();
+        return ModSounds.TENTACLED_HORROR_AMBIENT.get();
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource damageSource) {
+        return ModSounds.TENTACLED_HORROR_HURT.get();
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return ModSounds.TENTACLED_HORROR_DEATH.get();
+    }
+
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        playSound(ModSounds.TENTACLED_HORROR_STEP.get());
     }
 
     @Override
@@ -318,6 +334,7 @@ public class TentacledHorror extends BaseRiftMob {
                 case GRAB_HOLD -> {
                     if (target.getRandom().nextInt(20) == 0) {
                         // some crushing damage to the player periodically
+                        horror.playSound(ModSounds.TENTACLED_HORROR_SQUEEZE.get(), 1f, 0.8f + horror.random.nextFloat() * 0.4f);
                         target.hurt(target.level().damageSources().mobAttack(horror), 8f);
                     }
                     if (horror.random.nextInt(100) == 0) {
@@ -339,7 +356,7 @@ public class TentacledHorror extends BaseRiftMob {
                         if (target instanceof ServerPlayer sp) {
                             sp.connection.send(new ClientboundSetEntityMotionPacket(target));
                         }
-                        target.level().playSound(null, target.blockPosition(), SoundEvents.TRIDENT_THROW.value(), SoundSource.HOSTILE);
+                        target.level().playSound(null, target.blockPosition(), ModSounds.TENTACLED_HORROR_THROW.value(), SoundSource.HOSTILE);
                     }
                     if (cooldownCounter > 0 && --cooldownCounter == 0) {
                         cooldownCounter--;

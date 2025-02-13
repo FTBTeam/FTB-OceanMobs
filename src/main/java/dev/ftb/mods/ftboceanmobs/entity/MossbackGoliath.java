@@ -1,11 +1,14 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import dev.ftb.mods.ftboceanmobs.registry.ModParticleTypes;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -23,6 +26,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationController;
@@ -156,6 +160,16 @@ public class MossbackGoliath extends BaseRiftMob {
                 clientSideCachedAttackTarget = null;
             }
         }
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return ModSounds.MOSSBACK_GOLIATH_DEATH.get();
+    }
+
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        playSound(SoundEvents.AMETHYST_BLOCK_STEP);
     }
 
     private static class ShardAttackGoal extends Goal {

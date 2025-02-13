@@ -4,6 +4,7 @@ import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobsTags;
 import dev.ftb.mods.ftboceanmobs.mobai.RandomAttackableTargetGoal;
+import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -16,6 +17,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
@@ -98,7 +100,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     private final RiftWeaverPart arm1;
     private final RiftWeaverPart arm2;
 
-    private int fightPhase; // 0..3 based on health (does not tick backward)
+    private int fightPhase = -1; // -1..3 based on health (does not tick backward; -1 means newly spawned)
     private RiftWeaverMode currentMode = RiftWeaverModes.HOLD_POSITION;
     private RiftWeaverMode lastMode = RiftWeaverModes.HOLD_POSITION;
     private RiftWeaverMode queuedMode = null;  // next special mode to go into, only from hold/roam modes
@@ -267,6 +269,21 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         positionSubparts();
     }
 
+    @Override
+    protected SoundEvent getDeathSound() {
+        return ModSounds.RIFT_WEAVER_DEATH.get();
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource damageSource) {
+        return ModSounds.RIFT_WEAVER_HURT.get();
+    }
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return ModSounds.RIFT_WEAVER_AMBIENT.get();
+    }
+
     private double fudge(double val, double amount) {
         return val + random.nextDouble() * amount - amount / 2.0;
     }
@@ -337,6 +354,11 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
 
     @Override
     protected void customServerAiStep() {
+        if (fightPhase == -1) {
+            playSound(ModSounds.RIFT_WEAVER_SUMMON.get());
+            fightPhase = 0;
+        }
+
         if (!hasRestriction()) {
             // anchorPos == null: newly spawned
             // non-null: loaded from NBT

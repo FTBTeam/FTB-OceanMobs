@@ -39,9 +39,17 @@ public abstract class BaseRiftMob extends Monster implements GeoEntity {
         return true;
     }
 
+    @Override
+    public int getAmbientSoundInterval() {
+        return 120;
+    }
+
     protected boolean wantsToSwim() {
         LivingEntity target = getTarget();
         return target != null && (target.isInWater() || target.getY() - getY() > 2.0);
+    }
+
+    public void playDelayedAttackSound() {
     }
 
     static class RiftMobMoveControl extends MoveControl {
