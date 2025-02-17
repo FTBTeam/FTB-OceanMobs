@@ -65,11 +65,6 @@ public class MossbackGoliath extends BaseRiftMob {
     }
 
     @Override
-    protected boolean wantsToSwim() {
-        return false;
-    }
-
-    @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
 
