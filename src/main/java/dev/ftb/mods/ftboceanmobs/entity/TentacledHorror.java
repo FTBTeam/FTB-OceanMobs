@@ -41,6 +41,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -163,6 +164,11 @@ public class TentacledHorror extends BaseRiftMob {
         } else {
             return this.getTarget();
         }
+    }
+
+    @Override
+    protected AABB makeBoundingBox() {
+        return super.makeBoundingBox().inflate(0.4, 0.0, 0.4);
     }
 
     @Override

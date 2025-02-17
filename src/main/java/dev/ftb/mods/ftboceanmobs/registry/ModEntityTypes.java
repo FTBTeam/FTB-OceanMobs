@@ -98,7 +98,7 @@ public class ModEntityTypes {
 
     private static EntityType.Builder<TentacledHorror> tentacledHorror() {
         return EntityType.Builder.of(TentacledHorror::new, MobCategory.MONSTER)
-                .sized(2.5F, 9F)
+                .sized(1.7F, 9F)
                 .eyeHeight(7.1F)
                 .clientTrackingRange(10);
     }
