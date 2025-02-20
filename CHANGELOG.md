@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [21.1.2]
 
+### Changed
+* Rift Weaver boss now has much more health
+* Rift Weaver will periodically summon random rift mob reinforcements during the fight
+* All rift mobs will now aggro on Wardens (primarily for testing purposes, but also for entertainment value...)
+
 ### Fixed
 * Reworked mob move control when in water to fix problems with mobs getting stuck
 * Riftling Observer teleport behaviour is better now (less likely to teleport very far away, or to bottom of ocean)
