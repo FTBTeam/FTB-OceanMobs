@@ -19,6 +19,7 @@ import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -75,16 +76,17 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new ChargeGoal(this, 1.5f));
-        this.goalSelector.addGoal(1, new ThrowBlockGoal(this, THROW_TICKS, PICKUP_TICKS, LAUNCH_TICKS, THROW_CHANCE));
-        this.goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.0, false, 16));
+        goalSelector.addGoal(1, new ChargeGoal(this, 1.5f));
+        goalSelector.addGoal(1, new ThrowBlockGoal(this, THROW_TICKS, PICKUP_TICKS, LAUNCH_TICKS, THROW_CHANCE));
+        goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.0, false, 16));
 
-        this.goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
-        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Warden.class, true));
     }
 
     @Override

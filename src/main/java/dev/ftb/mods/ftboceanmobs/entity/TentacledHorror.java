@@ -34,6 +34,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.level.Level;
@@ -111,15 +112,16 @@ public class TentacledHorror extends BaseRiftMob {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new TentacleGrabGoal(this));
-        this.goalSelector.addGoal(1, new InkAttackGoal(this));
-        this.goalSelector.addGoal(2, new ChaseTargetGoal(this, 1.4, 48f));
-        this.goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
-        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(1, new TentacleGrabGoal(this));
+        goalSelector.addGoal(1, new InkAttackGoal(this));
+        goalSelector.addGoal(2, new ChaseTargetGoal(this, 1.4, 48f));
+        goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Warden.class, true));
     }
 
     @Override
