@@ -6,12 +6,18 @@ import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
 import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
 import dev.ftb.mods.ftboceanmobs.registry.*;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -21,6 +27,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import org.slf4j.Logger;
 
 @Mod(FTBOceanMobs.MODID)
@@ -41,6 +48,7 @@ public class FTBOceanMobs {
         modEventBus.addListener(DataGenerators::gatherData);
         modEventBus.addListener(this::addSpawnEggsToCreativeTab);
         modEventBus.addListener(this::registerEntityAttributes);
+        modEventBus.addListener(this::registerSpawnPlacements);
 
         registerAll(modEventBus);
 
@@ -89,5 +97,28 @@ public class FTBOceanMobs {
 
     private void registerCommands(RegisterCommandsEvent event) {
         ModCommands.register(event.getDispatcher(), event.getBuildContext());
+    }
+
+    private void registerSpawnPlacements(RegisterSpawnPlacementsEvent event) {
+        registerPlacement(event, ModEntityTypes.RIFTLING_OBSERVER.get(), Monster::checkAnyLightMonsterSpawnRules);
+        registerPlacement(event, ModEntityTypes.ABYSSAL_WINGED.get(), Monster::checkAnyLightMonsterSpawnRules);
+        registerPlacement(event, ModEntityTypes.CORROSIVE_CRAIG.get(), Monster::checkAnyLightMonsterSpawnRules);
+        registerPlacement(event, ModEntityTypes.MOSSBACK_GOLIATH.get(), Monster::checkAnyLightMonsterSpawnRules);
+        registerPlacement(event, ModEntityTypes.ABYSSAL_SLUDGE.get(), Monster::checkAnyLightMonsterSpawnRules);
+        registerPlacement(event, ModEntityTypes.SHADOW_BEAST.get(), Monster::checkAnyLightMonsterSpawnRules);
+        registerPlacement(event, ModEntityTypes.RIFT_MINOTAUR.get(), Monster::checkAnyLightMonsterSpawnRules);
+        registerPlacement(event, ModEntityTypes.TENTACLED_HORROR.get(), Monster::checkAnyLightMonsterSpawnRules);
+        registerPlacement(event, ModEntityTypes.RIFT_DEMON.get(), Monster::checkAnyLightMonsterSpawnRules);
+
+        registerPlacement(event, ModEntityTypes.SLUDGELING.get(), FTBOceanMobs::noNaturalSpawn);
+        registerPlacement(event, ModEntityTypes.RIFT_WEAVER.get(), FTBOceanMobs::noNaturalSpawn);
+    }
+
+    private <T extends Entity> void registerPlacement(RegisterSpawnPlacementsEvent event, EntityType<T> type, SpawnPlacements.SpawnPredicate<T> pred) {
+        event.register(type, SpawnPlacementTypes.NO_RESTRICTIONS, Heightmap.Types.WORLD_SURFACE, pred, RegisterSpawnPlacementsEvent.Operation.REPLACE);
+    }
+
+    private static boolean noNaturalSpawn(EntityType<?> entityType, ServerLevelAccessor serverLevel, MobSpawnType spawnType, BlockPos pos, RandomSource random) {
+        return false;
     }
 }
