@@ -22,12 +22,14 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.Tags;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.constant.DefaultAnimations;
@@ -70,14 +72,15 @@ public class RiftlingObserver extends BaseRiftMob {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new ObserverGazeAttackGoal(this));
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));
-        this.goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
-        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(1, new ObserverGazeAttackGoal(this));
+        goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));
+        goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Warden.class, true));
     }
 
     @Override
@@ -135,6 +138,8 @@ public class RiftlingObserver extends BaseRiftMob {
     public boolean hurt(DamageSource source, float amount) {
         if (this.isInvulnerableTo(source)) {
             return false;
+        } else if (source.is(Tags.DamageTypes.IS_TECHNICAL)) {
+            return super.hurt(source, amount);
         } else {
             boolean potion = source.getDirectEntity() instanceof ThrownPotion;
             if (!source.is(DamageTypeTags.IS_PROJECTILE) && !potion) {
@@ -161,32 +166,27 @@ public class RiftlingObserver extends BaseRiftMob {
     }
 
     private Vec3 findValidTeleportDest(double x, double y, double z) {
-        int y1 = level().getHeight(Heightmap.Types.WORLD_SURFACE, (int) x, (int) z) + 2;
-
         boolean okToTeleport = false;
-        BlockPos blockpos = BlockPos.containing(x, y1, z);
+        BlockPos blockpos = BlockPos.containing(x, y, z);
         Vec3 dest = null;
         if (level().hasChunkAt(blockpos)) {
-            boolean foundSolidBlock = false;
+            boolean foundValidBlock = false;
 
-            while (!foundSolidBlock && blockpos.getY() > level().getMinBuildHeight()) {
+            while (!foundValidBlock && blockpos.getY() > level().getMinBuildHeight()) {
                 BlockPos blockpos1 = blockpos.below();
                 BlockState blockstate = level().getBlockState(blockpos1);
-                if (blockstate.blocksMotion()) {
-                    foundSolidBlock = true;
+                if (blockstate.blocksMotion() || blockstate.getBlock() instanceof LiquidBlock) {
+                    foundValidBlock = true;
                 } else {
-                    y1--;
+                    y--;
                     blockpos = blockpos1;
                 }
             }
 
-            if (foundSolidBlock) {
-                teleportTo(x, y1, z);
-                if (level().noCollision(this) && !level().containsAnyLiquid(this.getBoundingBox())) {
-                    dest = new Vec3(x, y1, z);
+            if (foundValidBlock) {
+                if (level().noCollision(this, getBoundingBox().move(x - getX(), y - getY(), z - getZ()))) {
+                    dest = new Vec3(x, y, z);
                     okToTeleport = true;
-                } else {
-                    teleportTo(xo, yo, zo);
                 }
             }
         }

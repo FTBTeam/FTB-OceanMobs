@@ -3,6 +3,7 @@ package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobsTags;
+import dev.ftb.mods.ftboceanmobs.entity.BaseRiftMob;
 import dev.ftb.mods.ftboceanmobs.mobai.RandomAttackableTargetGoal;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
@@ -46,6 +47,7 @@ import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -114,6 +116,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     private float armorDurability = 0f;
     SeismicSmasher seismicSmasher;
     ChainsEncaser chainsEncaser;
+    private float accumulatedDmg = 0;
 
     public RiftWeaverBoss(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -145,7 +148,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         return Monster.createMonsterAttributes()
                 .add(Attributes.FLYING_SPEED, 0.9F)
                 .add(Attributes.MOVEMENT_SPEED, 0.27F)
-                .add(Attributes.MAX_HEALTH, 400.0)
+                .add(Attributes.MAX_HEALTH, 1000.0)
                 .add(Attributes.ARMOR, 4F)
                 .add(Attributes.ARMOR_TOUGHNESS, 2F)
                 .add(Attributes.FOLLOW_RANGE, 48F)
@@ -198,6 +201,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         armorDurability = compound.getFloat("armorDurability");
         setArmorActive(compound.getBoolean("armorActive"));
         setFrenzied(compound.getBoolean("frenzied"));
+        accumulatedDmg = compound.getFloat("accumulatedDmg");
     }
 
     @Override
@@ -213,6 +217,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         if (armorDurability > 0f) compound.putFloat("armorDurability", armorDurability);
         if (isArmorActive()) compound.putBoolean("armorActive", true);
         if (isFrenzied()) compound.putBoolean("frenzied", true);
+        if (accumulatedDmg > 0f) compound.putFloat("accumulatedDmg", accumulatedDmg);
     }
 
     @Override
@@ -285,10 +290,6 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         return ModSounds.RIFT_WEAVER_AMBIENT.get();
     }
 
-    private double fudge(double val, double amount) {
-        return val + random.nextDouble() * amount - amount / 2.0;
-    }
-
     private void positionSubparts() {
         Vec3[] prevPartPos = new Vec3[subParts.length];
         for (int i = 0; i < subParts.length; i++) {
@@ -350,6 +351,9 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         }
         if (deathTime >= 40 && !level().isClientSide() && !isRemoved()) {
             this.remove(Entity.RemovalReason.KILLED);
+            this.gameEvent(GameEvent.ENTITY_DIE);
+            level().getEntities(this, new AABB(spawnPos).inflate(Config.arenaRadius), e -> e instanceof BaseRiftMob)
+                    .forEach(Entity::kill);
         }
     }
 
@@ -360,14 +364,19 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             fightPhase = 0;
         }
 
-        if (tickCount % 20 == 0 && getHealth() < getMaxHealth()) {
-            // fast health regen if no player in arena (we allow creative mode players though)
-            Vec3 spawn = Vec3.atCenterOf(spawnPos);
-            AABB aabb = new AABB(blockPosition()).inflate(Config.arenaRadius);
-            boolean playerPresent = level().getNearbyPlayers(TargetingConditions.forNonCombat(), this, aabb).stream()
-                    .anyMatch(p -> p.distanceToSqr(spawn) < Config.arenaRadiusSq);
-            if (!playerPresent) {
-                setHealth(Math.min(getMaxHealth(), getHealth() + 20f));
+        if (tickCount % 20 == 0 && isAlive()) {
+            int nPlayers = countPlayersInArena();
+            if (getHealth() < getMaxHealth()) {
+                float regen = 0f;
+                if (nPlayers == 0) {
+                    // fast health regen if no player in arena (we allow creative mode players though)
+                    regen = 50f;
+                } else if (nPlayers > 1) {
+                    regen = 5f + 3f * (nPlayers - 2);
+                }
+                if (regen != 0) {
+                    setHealth(Math.min(getMaxHealth(), getHealth() + regen));
+                }
             }
         }
 
@@ -405,6 +414,9 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             lookControl.setLookAt(getTarget());
             if (fightPhase >= 3 && tickCount > nextChainsAttack) {
                 queueMode(RiftWeaverModes.CHAINS);
+            } else if (accumulatedDmg > getMaxHealth() / 5 && queuedMode == null && isAlive()) {
+                queueMode(RiftWeaverModes.REINFORCE);
+                accumulatedDmg = 0;
             } else if (fightPhase >= 2 && random.nextInt(300) == 0) {
                 queueMode(RiftWeaverModes.SEISMIC_SMASH);
             } else if (tickCount >= nextMeleeSlash) {
@@ -486,6 +498,8 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         } else if (prevHealthPct >= 0.25f && newHealthPct < 0.25f) {
             advanceFightPhase(3);
         }
+
+        accumulatedDmg += damageAmount;
     }
 
     @Override
@@ -568,6 +582,13 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
 
     public boolean isFrenzied() {
         return getEntityData().get(FRENZIED);
+    }
+
+    int countPlayersInArena() {
+        AABB aabb = new AABB(blockPosition()).inflate(Config.arenaRadius);
+        return (int) level().getNearbyPlayers(TargetingConditions.forNonCombat(), this, aabb).stream()
+                .filter(this::isInArena)
+                .count();
     }
 
     public boolean isInArena(Entity entity) {

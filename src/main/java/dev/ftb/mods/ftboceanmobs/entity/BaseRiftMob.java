@@ -2,7 +2,6 @@ package dev.ftb.mods.ftboceanmobs.entity;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
@@ -13,6 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
 
 public abstract class BaseRiftMob extends Monster implements GeoEntity {
@@ -36,17 +36,13 @@ public abstract class BaseRiftMob extends Monster implements GeoEntity {
 
     @Override
     public boolean checkSpawnRules(LevelAccessor level, MobSpawnType spawnReason) {
+        // rift mobs don't care about light levels for spawning purposes
         return true;
     }
 
     @Override
     public int getAmbientSoundInterval() {
         return 120;
-    }
-
-    protected boolean wantsToSwim() {
-        LivingEntity target = getTarget();
-        return target != null && (target.isInWater() || target.getY() - getY() > 2.0);
     }
 
     public void playDelayedAttackSound() {
@@ -62,34 +58,23 @@ public abstract class BaseRiftMob extends Monster implements GeoEntity {
 
         @Override
         public void tick() {
-            LivingEntity livingentity = baseRiftMob.getTarget();
-            if (baseRiftMob.wantsToSwim() && baseRiftMob.isInWater()) {
-                if (livingentity != null && livingentity.getY() > baseRiftMob.getY()) {
-                    baseRiftMob.setDeltaMovement(baseRiftMob.getDeltaMovement().add(0.0, 0.03, 0.0));
+            if (baseRiftMob.isInWater()) {
+                if (operation == MoveControl.Operation.MOVE_TO && !baseRiftMob.getNavigation().isDone()) {
+                    Vec3 vec3 = new Vec3(wantedX - baseRiftMob.getX(), wantedY - baseRiftMob.getY(), wantedZ - baseRiftMob.getZ());
+                    double yOff = vec3.y;
+                    float yRot = (float) (Mth.atan2(vec3.z, vec3.x) * 180.0F / (float) Math.PI) - 90.0F;
+                    baseRiftMob.setYRot(rotlerp(baseRiftMob.getYRot(), yRot, 90.0F));
+                    baseRiftMob.yBodyRot = baseRiftMob.getYRot();
+                    float baseSpeed = (float) (speedModifier * baseRiftMob.getAttributeValue(Attributes.MOVEMENT_SPEED));
+                    float speed = Mth.lerp(0.125F, baseRiftMob.getSpeed(), baseSpeed);
+                    baseRiftMob.setSpeed(speed);
+                    double moveX = Math.cos(baseRiftMob.getYRot() * (float) (Math.PI / 180.0));
+                    double moveZ = Math.sin(baseRiftMob.getYRot() * (float) (Math.PI / 180.0));
+                    double hBob = Math.sin((double) (baseRiftMob.tickCount + baseRiftMob.getId()) * 0.5) * 0.05;
+                    double vBob = Math.sin((double) (baseRiftMob.tickCount + baseRiftMob.getId()) * 0.75) * 0.05;
+                    baseRiftMob.setDeltaMovement(baseRiftMob.getDeltaMovement().add(hBob * moveX, vBob * (moveZ + moveX) * 0.35 + (double) speed * yOff * 0.25, hBob * moveZ));
                 }
-
-                if (this.operation != MoveControl.Operation.MOVE_TO || baseRiftMob.getNavigation().isDone()) {
-                    baseRiftMob.setSpeed(0.0F);
-                    return;
-                }
-
-                double xOff = this.wantedX - baseRiftMob.getX();
-                double yOff = this.wantedY - baseRiftMob.getY();
-                double zOff = this.wantedZ - baseRiftMob.getZ();
-//                double d3 = Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
-//                d1 /= d3;
-                float f = (float)(Mth.atan2(zOff, xOff) * 180.0F / (float)Math.PI) - 90.0F;
-                baseRiftMob.setYRot(this.rotlerp(baseRiftMob.getYRot(), f, 90.0F));
-                baseRiftMob.yBodyRot = baseRiftMob.getYRot();
-                float baseSpeed = (float)(this.speedModifier * baseRiftMob.getAttributeValue(Attributes.MOVEMENT_SPEED));
-                float speed = Mth.lerp(0.125F, baseRiftMob.getSpeed(), baseSpeed);
-                baseRiftMob.setSpeed(speed);
-                baseRiftMob.setDeltaMovement(baseRiftMob.getDeltaMovement().add((double)speed * xOff * 0.005, (double)speed * yOff * 0.1, (double)speed * zOff * 0.005));
             } else {
-//                if (!baseRiftMob.onGround()) {
-//                    baseRiftMob.setDeltaMovement(baseRiftMob.getDeltaMovement().add(0.0, -0.008, 0.0));
-//                }
-
                 super.tick();
             }
         }

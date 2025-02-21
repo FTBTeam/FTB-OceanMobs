@@ -41,6 +41,7 @@ public class FTBOceanMobs {
         modEventBus.addListener(DataGenerators::gatherData);
         modEventBus.addListener(this::addSpawnEggsToCreativeTab);
         modEventBus.addListener(this::registerEntityAttributes);
+        modEventBus.addListener(RiftMobPlacement::registerSpawnPlacements);
 
         registerAll(modEventBus);
 

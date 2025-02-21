@@ -18,6 +18,7 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
@@ -49,6 +50,7 @@ public class ShadowBeast extends BaseRiftMob {
                 .add(Attributes.ARMOR_TOUGHNESS, 4F)
                 .add(Attributes.FOLLOW_RANGE, 48F)
                 .add(Attributes.WATER_MOVEMENT_EFFICIENCY, 0.33333333F)
+                .add(Attributes.GRAVITY, 0.015)
                 .add(Attributes.ATTACK_DAMAGE, 7.0);
     }
 
@@ -61,15 +63,16 @@ public class ShadowBeast extends BaseRiftMob {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new ShadowRoarGoal(this));
-        this.goalSelector.addGoal(2, new LeapAtTargetGoal(this, 0.42F));
-        this.goalSelector.addGoal(3, new DelayedMeleeAttackGoal(this, 1.0, false, 12));
-        this.goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
-        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(1, new ShadowRoarGoal(this));
+        goalSelector.addGoal(2, new LeapAtTargetGoal(this, 0.4F));
+        goalSelector.addGoal(3, new DelayedMeleeAttackGoal(this, 1.0, false, 12));
+        goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Warden.class, true));
     }
 
     @Override

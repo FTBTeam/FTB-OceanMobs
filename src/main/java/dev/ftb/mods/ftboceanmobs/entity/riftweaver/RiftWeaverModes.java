@@ -1,28 +1,32 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
 import dev.ftb.mods.ftboceanmobs.Config;
+import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModFluids;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animation.RawAnimation;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class RiftWeaverModes {
@@ -114,7 +118,7 @@ public class RiftWeaverModes {
             if (modeTicksRemaining == 5) {
                 // hurt all targets in a wide area in front of the weaver
                 boss.playSound(ModSounds.RIFT_DEMON_ATTACK.get());
-                for (LivingEntity e : boss.level().getNearbyEntities(LivingEntity.class, RiftWeaverBoss.NOT_RIFT_MOBS, boss, new AABB(boss.blockPosition()).inflate(10))) {
+                for (LivingEntity e : boss.level().getNearbyEntities(LivingEntity.class, RiftWeaverBoss.NOT_RIFT_MOBS, boss, new AABB(boss.blockPosition()).inflate(8))) {
                     if (MiscUtil.isLookingAtMe(e, boss, 0.9)) {
                         boss.doHurtTarget(e);
                         if (boss.isFrenzied() && boss.getRandom().nextBoolean()) {
@@ -213,6 +217,63 @@ public class RiftWeaverModes {
         @Override
         RawAnimation getAnimation() {
             return RiftWeaverBoss.CHAINS_ANIMATION;
+        }
+    });
+
+    public static final RiftWeaverMode REINFORCE = registerMode(new RiftWeaverMode("reinforce", 40) {
+        @Override
+        void tickMode(RiftWeaverBoss boss, int modeTicksRemaining) {
+            if (modeTicksRemaining == 10) {
+                summonReinforcements(boss);
+            }
+        }
+
+        @Override
+        RawAnimation getAnimation() {
+            return RiftWeaverBoss.CHAINS_ANIMATION;
+        }
+
+        private void summonReinforcements(RiftWeaverBoss boss) {
+            int nPlayers = boss.countPlayersInArena();
+            float healthPct = boss.getHealth() / boss.getMaxHealth();
+            int healthMod = (int) ((1f - healthPct) * 5);
+            int nMobs = 6 + healthMod + nPlayers - 1;
+            RandomSource random = boss.getRandom();
+            Level level = boss.level();
+
+            List<EntityType<?>> toSpawn = new ArrayList<>();
+            for (int i = 0; i < nMobs; i++) {
+                toSpawn.add(ModEntityTypes.pickRandomMob(random));
+            }
+            if (healthPct <= 0.2f) {
+                toSpawn.add(ModEntityTypes.RIFT_DEMON.get());
+            }
+
+            toSpawn.forEach(entityType -> {
+                // try up to 3 times to spawn each mob at a random position in the arena
+                for (int i = 0; i < 3; i++) {
+                    double angle = random.nextDouble() * Math.PI * 2.0;
+                    double dist = 5 + random.nextInt(Config.arenaRadius - 5);
+                    double x = boss.getSpawnPos().getX() + Math.cos(angle) * dist;
+                    double z = boss.getSpawnPos().getZ() + Math.sin(angle) * dist;
+                    BlockPos pos = BlockPos.containing(x, boss.getSpawnPos().getY(), z);
+                    int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ());
+                    BlockPos reinfSpawnPos = new BlockPos(pos.getX(), y + 2, pos.getZ());
+                    Vec3 vec = Vec3.atBottomCenterOf(reinfSpawnPos);
+
+                    if (level.noCollision(entityType.getSpawnAABB(vec.x, vec.y, vec.z))) {
+                        if (entityType.spawn((ServerLevel) level, null, reinfSpawnPos, MobSpawnType.REINFORCEMENT,
+                                false, false) != null) {
+                            level.gameEvent(boss, GameEvent.ENTITY_PLACE, reinfSpawnPos);
+                            LightningBolt bolt = new LightningBolt(EntityType.LIGHTNING_BOLT, level);
+                            bolt.setPos(vec.x, vec.y, vec.z);
+                            bolt.setVisualOnly(true);
+                            level.addFreshEntity(bolt);
+                            break;
+                        }
+                    }
+                }
+            });
         }
     });
 
