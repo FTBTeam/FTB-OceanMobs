@@ -4,9 +4,8 @@ import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
@@ -21,9 +20,12 @@ import net.minecraft.world.entity.ai.util.HoverRandomPos;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.Tags;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -51,6 +53,7 @@ public class AbyssalWinged extends BaseRiftMob {
                 .add(Attributes.ARMOR, 16F)
                 .add(Attributes.ARMOR_TOUGHNESS, 6F)
                 .add(Attributes.FOLLOW_RANGE, 32F)
+                .add(Attributes.GRAVITY, 0.015)
                 .add(Attributes.ATTACK_DAMAGE, 9.0);
     }
 
@@ -127,6 +130,17 @@ public class AbyssalWinged extends BaseRiftMob {
 
     @Override
     protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
+    }
+
+    @Override
+    public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        if (spawnType == MobSpawnType.NATURAL && level.getFluidState(blockPosition()).is(Tags.Fluids.WATER)) {
+            BlockPos pos = blockPosition();
+            int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ()) + 4;
+            moveTo(Vec3.atCenterOf(pos.above(y - pos.getY())));
+        }
+
+        return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
     }
 
     public static class AbyssalWingedWanderGoal extends WaterAvoidingRandomFlyingGoal {
