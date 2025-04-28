@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.mobai;
 
+import dev.ftb.mods.ftboceanmobs.integration.ftbchunks.FTBChunksIntegration;
 import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
@@ -142,6 +143,7 @@ public class ChargeGoal extends Goal {
         return hardness >= 0f && hardness < 50f && !state.isAir()
                 && level.getBlockEntity(pos) == null
                 && state.getBlock().canEntityDestroy(state, level, pos, entity)
+                && FTBChunksIntegration.canMobGriefBlocks(level, pos)
                 && EventHooks.onEntityDestroyBlock(entity, pos, state);
     }
 }
