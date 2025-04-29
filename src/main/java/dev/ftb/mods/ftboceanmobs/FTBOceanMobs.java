@@ -5,6 +5,7 @@ import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
 import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
 import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
+import dev.ftb.mods.ftboceanmobs.integration.ftbchunks.FTBChunksIntegration;
 import dev.ftb.mods.ftboceanmobs.registry.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -46,6 +47,8 @@ public class FTBOceanMobs {
         registerAll(modEventBus);
 
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
+
+        FTBChunksIntegration.init();
     }
 
     public static ResourceLocation id(String path) {
