@@ -7,7 +7,6 @@ import dev.ftb.mods.ftboceanmobs.block.SludgeBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -17,20 +16,20 @@ public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(FTBOceanMobs.MODID);
 
     public static final DeferredBlock<LiquidBlock> ABYSSAL_WATER = BLOCKS.registerBlock("abyssal_water",
-            props -> new AbyssalWaterBlock(ModFluids.ABYSSAL_WATER.get(), props), fluidProps());
+            props -> new AbyssalWaterBlock(ModFluids.ABYSSAL_WATER.get(), props), ModBlocks::fluidProps);
 
     public static final DeferredBlock<EnergyGeyserBlock> ENERGY_GEYSER = BLOCKS.registerBlock("energy_geyser",
-            EnergyGeyserBlock::new, BlockBehaviour.Properties.of());
+            EnergyGeyserBlock::new);
 
     public static final DeferredBlock<SludgeBlock> SLUDGE_BLOCK = BLOCKS.registerBlock("sludge_block",
-            SludgeBlock::new, BlockBehaviour.Properties.of().noOcclusion().friction(0.8f).sound(SoundType.SLIME_BLOCK).mapColor(MapColor.COLOR_PURPLE).strength(0.75f));
+            SludgeBlock::new, props -> props.noOcclusion().friction(0.8f).sound(SoundType.SLIME_BLOCK).mapColor(MapColor.COLOR_PURPLE).strength(0.75f));
 
     //-----------------------
 
     private static Block.Properties fluidProps() {
         return Block.Properties.of()
                 .mapColor(MapColor.WATER)
-                .noCollission()
+                .noCollision()
                 .strength(100f)
                 .pushReaction(PushReaction.DESTROY)
                 .noLootTable()

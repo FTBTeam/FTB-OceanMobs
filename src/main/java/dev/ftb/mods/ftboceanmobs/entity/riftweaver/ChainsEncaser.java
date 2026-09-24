@@ -41,9 +41,9 @@ public class ChainsEncaser {
 
         Vec3 viewVec = boss.getViewVector(1f).normalize();
         for (int i = posIndex; i < tgtIndex; i++) {
-            float radius = boss.level().random.nextFloat() * Config.arenaRadius;
-            float yOff = boss.level().random.nextFloat() * (RiftWeaverBoss.ARENA_HEIGHT - 10) + 10;
-            float angle = boss.level().random.nextFloat() * Mth.TWO_PI;
+            float radius = boss.level().getRandom().nextFloat() * Config.arenaRadius;
+            float yOff = boss.level().getRandom().nextFloat() * (RiftWeaverBoss.ARENA_HEIGHT - 10) + 10;
+            float angle = boss.level().getRandom().nextFloat() * Mth.TWO_PI;
             Vec3 launchPos = Vec3.atCenterOf(boss.getSpawnPos()).add(Mth.cos(angle) * radius, yOff, Mth.sin(angle) * radius);
             Vec3 tgtPos = Vec3.atBottomCenterOf(positions.get(posIndex)).add(0, 1, 0);
             TumblingBlockEntity t = new TumblingBlockEntity(boss.level(), boss, launchPos.x, launchPos.y, launchPos.z, ModBlocks.SLUDGE_BLOCK.toStack())

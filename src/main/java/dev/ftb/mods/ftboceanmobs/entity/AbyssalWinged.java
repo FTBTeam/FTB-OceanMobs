@@ -1,6 +1,14 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
-import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
+import dev.ftb.mods.ftboceanmobs.mobai.FlyingPassAttackGoal;
+import dev.ftb.mods.ftboceanmobs.mobai.MeleeAttackTiming;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
@@ -27,13 +35,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.AnimationState;
-import software.bernie.geckolib.animation.PlayState;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class AbyssalWinged extends BaseRiftMob {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -62,13 +63,13 @@ public class AbyssalWinged extends BaseRiftMob {
         FlyingPathNavigation nav = new FlyingPathNavigation(this, level);
         nav.setCanOpenDoors(false);
         nav.setCanFloat(true);
-        nav.setCanPassDoors(true);
+        nav.getNodeEvaluator().setCanPassDoors(true);
         return nav;
     }
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(1, new DelayedMeleeAttackGoal(this, 3f, true, 15));
+        goalSelector.addGoal(1, new FlyingPassAttackGoal(this));
         goalSelector.addGoal(2, new AbyssalWingedWanderGoal(this));
         goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8F));
 
@@ -78,9 +79,9 @@ public class AbyssalWinged extends BaseRiftMob {
     }
 
     @Override
-    protected AABB getAttackBoundingBox() {
+    protected AABB getAttackBoundingBox(double horizontalExpansion) {
         // long arms...
-        return super.getAttackBoundingBox().inflate(1.4);
+        return super.getAttackBoundingBox(horizontalExpansion).inflate(1.4);
     }
 
     @Override
@@ -100,14 +101,14 @@ public class AbyssalWinged extends BaseRiftMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "Default", 5, this::determineAnimationState));
+        controllers.add(new AnimationController<>("Default", MeleeAttackTiming.TRANSITION_TICKS, this::determineAnimationState));
     }
 
-    private PlayState determineAnimationState(AnimationState<AbyssalWinged> state) {
+    private PlayState determineAnimationState(AnimationTest<AbyssalWinged> state) {
         state.setControllerSpeed(1f);
         if (swinging) {
             state.setAnimation(DefaultAnimations.ATTACK_STRIKE);
-            state.setControllerSpeed(2.5f);
+            state.setControllerSpeed(MeleeAttackTiming.WINGED.animationSpeed());
         } else if (onGround()) {
             state.setAnimation(DefaultAnimations.REST);
         } else if (state.isMoving()) {
@@ -120,7 +121,7 @@ public class AbyssalWinged extends BaseRiftMob {
 
     @Override
     public int getCurrentSwingDuration() {
-        return 17;
+        return MeleeAttackTiming.WINGED.durationTicks();
     }
 
     @Override
@@ -133,11 +134,11 @@ public class AbyssalWinged extends BaseRiftMob {
     }
 
     @Override
-    public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
-        if (spawnType == MobSpawnType.NATURAL && level.getFluidState(blockPosition()).is(Tags.Fluids.WATER)) {
+    public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        if (spawnType == EntitySpawnReason.NATURAL && level.getFluidState(blockPosition()).is(Tags.Fluids.WATER)) {
             BlockPos pos = blockPosition();
             int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ()) + 4;
-            moveTo(Vec3.atCenterOf(pos.above(y - pos.getY())));
+            snapTo(Vec3.atCenterOf(pos.above(y - pos.getY())));
         }
 
         return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);

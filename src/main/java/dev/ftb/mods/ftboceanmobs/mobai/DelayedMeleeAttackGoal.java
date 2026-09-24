@@ -6,53 +6,95 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-
-/**
- * Delays the actual attack damage by a few ticks so it works well with the mob's swinging animation
- */
+/** One committed swing at a time, with server-authoritative impact and recovery. */
 public class DelayedMeleeAttackGoal extends MeleeAttackGoal {
-    private final int delayTicks;
+    private final MeleeAttackTiming timing;
+    private LivingEntity attackTarget;
+    private int attackStarted;
+    private int nextAttackTick;
+    private boolean impactDone;
 
-    private final Deque<QueuedAttack> queuedAttacks = new ArrayDeque<>();
-
-    public DelayedMeleeAttackGoal(PathfinderMob mob, double speedModifier, boolean followingTargetEvenIfNotSeen, int delayTicks) {
+    public DelayedMeleeAttackGoal(PathfinderMob mob, double speedModifier, boolean followingTargetEvenIfNotSeen, MeleeAttackTiming timing) {
         super(mob, speedModifier, followingTargetEvenIfNotSeen);
+        this.timing = timing;
+    }
 
-        this.delayTicks = delayTicks;
+    protected boolean isValidTarget(LivingEntity target) {
+        return target != null && target.isAlive() && mob.canAttack(target)
+                && mob.isWithinHome(target.blockPosition());
+    }
+
+    @Override
+    public boolean canUse() {
+        return isValidTarget(mob.getTarget()) && super.canUse();
     }
 
     @Override
     public boolean canContinueToUse() {
-        return super.canContinueToUse() || !queuedAttacks.isEmpty();
+        return isValidTarget(mob.getTarget())
+                && (isAttackInProgress() || mob.isWithinMeleeAttackRange(mob.getTarget()) || super.canContinueToUse());
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        cancelAttack();
+    }
+
+    protected final boolean isAttackInProgress() {
+        return attackTarget != null;
+    }
+
+    private void cancelAttack() {
+        attackTarget = null;
+        mob.swinging = false;
+        mob.swingTime = 0;
+        // nextAttackTick deliberately survives interruption/restart.
     }
 
     @Override
     public void tick() {
-        super.tick();
-
-        if (!queuedAttacks.isEmpty()) {
-            QueuedAttack next = queuedAttacks.peekFirst();
-            if (next.when <= mob.tickCount) {
-                queuedAttacks.removeFirst();
-                if (mob instanceof BaseRiftMob b) b.playDelayedAttackSound();
-                if (next.target.isAlive() && mob.isWithinMeleeAttackRange(next.target)) {
-                    mob.doHurtTarget(next.target);
+        if (isAttackInProgress()) {
+            if (mob.getTarget() != attackTarget || !isValidTarget(attackTarget)) {
+                cancelAttack();
+                return;
+            }
+            mob.getNavigation().stop();
+            mob.getLookControl().setLookAt(attackTarget, 30f, 30f);
+            int elapsed = mob.tickCount - attackStarted;
+            if (!impactDone && elapsed >= timing.impactTick()) {
+                impactDone = true;
+                if (mob instanceof BaseRiftMob riftMob) riftMob.playDelayedAttackSound();
+                if (mob.getSensing().hasLineOfSight(attackTarget) && mob.isWithinMeleeAttackRange(attackTarget)) {
+                    mob.doHurtTarget(getServerLevel(mob), attackTarget);
                 }
             }
+            if (elapsed >= timing.durationTicks()) {
+                attackTarget = null;
+                onAttackFinished();
+            }
+        } else {
+            super.tick();
         }
+    }
+
+    protected void onAttackFinished() {
+    }
+
+    @Override
+    protected boolean isTimeToAttack() {
+        return !isAttackInProgress() && mob.tickCount >= nextAttackTick;
     }
 
     @Override
     protected void checkAndPerformAttack(LivingEntity target) {
-        if (this.canPerformAttack(target)) {
-            this.resetAttackCooldown();
-            this.mob.swing(InteractionHand.MAIN_HAND);
-            queuedAttacks.addLast(new QueuedAttack(mob.tickCount + delayTicks, target));
+        if (isValidTarget(target) && canPerformAttack(target)) {
+            attackTarget = target;
+            attackStarted = mob.tickCount;
+            nextAttackTick = attackStarted + timing.cooldownTicks();
+            impactDone = false;
+            mob.getNavigation().stop();
+            mob.swing(InteractionHand.MAIN_HAND);
         }
-    }
-
-    private record QueuedAttack(long when, LivingEntity target) {
     }
 }

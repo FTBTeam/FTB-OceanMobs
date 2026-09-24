@@ -2,8 +2,8 @@ package dev.ftb.mods.ftboceanmobs.datagen;
 
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobsTags;
-import net.minecraft.advancements.critereon.EntityPredicate;
-import net.minecraft.advancements.critereon.EntityTypePredicate;
+import net.minecraft.advancements.criterion.EntityPredicate;
+import net.minecraft.advancements.criterion.EntityTypePredicate;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
@@ -30,7 +30,7 @@ public class ModEnchantmentProvider {
                         Component.translatable("enchantment.ftboceanmobs.rift_disruptor"),
                         new Enchantment.EnchantmentDefinition(
                             context.lookup(Registries.ITEM).getOrThrow(ItemTags.WEAPON_ENCHANTABLE),
-                                Optional.of(context.lookup(Registries.ITEM).getOrThrow(ItemTags.SWORD_ENCHANTABLE)),
+                                Optional.of(context.lookup(Registries.ITEM).getOrThrow(ItemTags.MELEE_WEAPON_ENCHANTABLE)),
                                 5,
                                 5,
                                 new Enchantment.Cost(5, 8),
@@ -44,7 +44,7 @@ public class ModEnchantmentProvider {
                                         new AddValue(LevelBasedValue.perLevel(2.5F)),
                                         Optional.of(LootItemEntityPropertyCondition.hasProperties(
                                                 LootContext.EntityTarget.THIS, EntityPredicate.Builder.entity()
-                                                        .entityType(EntityTypePredicate.of(FTBOceanMobsTags.Entity.RIFT_MOBS))
+                                                        .entityType(EntityTypePredicate.of(context.lookup(Registries.ENTITY_TYPE), FTBOceanMobsTags.Entity.RIFT_MOBS))
                                         ).build())
                                 ))).build()
                 )

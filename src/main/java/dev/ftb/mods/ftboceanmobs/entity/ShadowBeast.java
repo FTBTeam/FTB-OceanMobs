@@ -1,10 +1,20 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.RawAnimation;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
 import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import dev.ftb.mods.ftboceanmobs.mobai.MeleeAttackTiming;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -22,10 +32,6 @@ import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.EnumSet;
 
@@ -65,7 +71,7 @@ public class ShadowBeast extends BaseRiftMob {
     protected void registerGoals() {
         goalSelector.addGoal(1, new ShadowRoarGoal(this));
         goalSelector.addGoal(2, new LeapAtTargetGoal(this, 0.4F));
-        goalSelector.addGoal(3, new DelayedMeleeAttackGoal(this, 1.0, false, 12));
+        goalSelector.addGoal(3, new DelayedMeleeAttackGoal(this, 1.0, false, MeleeAttackTiming.SHADOW_BEAST));
         goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         goalSelector.addGoal(8, new RandomLookAroundGoal(this));
@@ -77,21 +83,22 @@ public class ShadowBeast extends BaseRiftMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "Walk/Idle", 10, this::walkIdleRegenState));
-        controllers.add(new AnimationController<>(this, "Attacking", 5, this::attackState));
+        controllers.add(new AnimationController<>("Walk/Idle", 10, this::walkIdleRegenState));
+        controllers.add(new AnimationController<>("Attacking", MeleeAttackTiming.TRANSITION_TICKS, this::attackState));
     }
 
-    private PlayState attackState(AnimationState<ShadowBeast> state) {
+    private PlayState attackState(AnimationTest<ShadowBeast> state) {
         state.setControllerSpeed(1f);
         if (isRoaring()) {
             return state.setAndContinue(ANIM_ATTACK_ROAR);
         } else if (swinging) {
+            state.setControllerSpeed(MeleeAttackTiming.SHADOW_BEAST.animationSpeed());
             return state.setAndContinue(DefaultAnimations.ATTACK_STRIKE);
         }
         return PlayState.STOP;
     }
 
-    private PlayState walkIdleRegenState(AnimationState<ShadowBeast> state) {
+    private PlayState walkIdleRegenState(AnimationTest<ShadowBeast> state) {
         state.setControllerSpeed(1f);
         if (state.isMoving()) {
             state.setControllerSpeed(3f);
@@ -111,8 +118,13 @@ public class ShadowBeast extends BaseRiftMob {
     }
 
     @Override
+    public float getHeadTrackingWeight() {
+        return isRoaring() ? 0f : super.getHeadTrackingWeight();
+    }
+
+    @Override
     public int getCurrentSwingDuration() {
-        return isRoaring() ? 40 : 20;
+        return isRoaring() ? 40 : MeleeAttackTiming.SHADOW_BEAST.durationTicks();
     }
 
     @Override
@@ -131,8 +143,8 @@ public class ShadowBeast extends BaseRiftMob {
     }
 
     @Override
-    public boolean doHurtTarget(Entity entity) {
-        if (entity instanceof LivingEntity livingEntity && super.doHurtTarget(entity)) {
+    public boolean doHurtTarget(ServerLevel level, Entity entity) {
+        if (entity instanceof LivingEntity livingEntity && super.doHurtTarget(level, entity)) {
             if (entity.getRandom().nextInt(6) == 0) {
                 livingEntity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40 + entity.getRandom().nextInt(40)));
             }
@@ -189,9 +201,9 @@ public class ShadowBeast extends BaseRiftMob {
             if (shadowBeast.roarWarmupTick == 16) {
                 shadowBeast.playSound(ModSounds.SHADOWBEAST_ROAR.get(), 1f,0.5f);
             } else if (shadowBeast.roarWarmupTick == 10) {
-                shadowBeast.level().getNearbyEntities(Player.class, TargetingConditions.DEFAULT, shadowBeast, shadowBeast.getBoundingBox().inflate(16.0))
+                getServerLevel(shadowBeast).getNearbyEntities(Player.class, TargetingConditions.DEFAULT, shadowBeast, shadowBeast.getBoundingBox().inflate(16.0))
                         .forEach(player -> {
-                            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40 + shadowBeast.getRandom().nextInt(60), 3));
+                            player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40 + shadowBeast.getRandom().nextInt(60), 3));
                             player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 60 + shadowBeast.getRandom().nextInt(20), 0));
                         });
             }

@@ -1,5 +1,13 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
+import dev.ftb.mods.ftboceanmobs.mobai.RangedPositionGoal;
 import dev.ftb.mods.ftboceanmobs.registry.ModParticleTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
@@ -28,16 +36,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.AnimationState;
-import software.bernie.geckolib.animation.PlayState;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
-import javax.annotation.Nullable;
 import java.util.EnumSet;
+import javax.annotation.Nullable;
 
 public class MossbackGoliath extends BaseRiftMob {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -77,7 +78,7 @@ public class MossbackGoliath extends BaseRiftMob {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new ShardAttackGoal(this));
-        goalSelector.addGoal(2, new MoveTowardsTargetGoal(this, 1.3, 32.0F));
+        goalSelector.addGoal(2, new RangedPositionGoal(this, 1.3, 8, 16));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         goalSelector.addGoal(8, new RandomLookAroundGoal(this));
         goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
@@ -89,17 +90,22 @@ public class MossbackGoliath extends BaseRiftMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(DefaultAnimations.genericWalkIdleController(this));
-        controllers.add(new AnimationController<>(this, "Attacking", 5, this::attackState));
+        controllers.add(DefaultAnimations.genericWalkIdleController());
+        controllers.add(new AnimationController<>("Attacking", 0, this::attackState));
     }
 
-    private PlayState attackState(AnimationState<MossbackGoliath> state) {
+    private PlayState attackState(AnimationTest<MossbackGoliath> state) {
         return getEntityData().get(DATA_SHARD_WARMUP) ? state.setAndContinue(DefaultAnimations.ATTACK_SHOOT) : PlayState.STOP;
     }
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
+    }
+
+    @Override
+    public float getHeadTrackingWeight() {
+        return entityData.get(DATA_SHARD_WARMUP) ? 0f : super.getHeadTrackingWeight();
     }
 
     @Override
@@ -129,7 +135,7 @@ public class MossbackGoliath extends BaseRiftMob {
     public LivingEntity getSyncedTarget() {
         if (!this.hasSyncedTarget()) {
             return null;
-        } else if (this.level().isClientSide) {
+        } else if (this.level().isClientSide()) {
             if (this.clientSideCachedAttackTarget != null) {
                 return this.clientSideCachedAttackTarget;
             } else {
@@ -150,7 +156,7 @@ public class MossbackGoliath extends BaseRiftMob {
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
 
-        if (level().isClientSide) {
+        if (level().isClientSide()) {
             if (DATA_SHARD_FIRING.equals(key) && entityData.get(DATA_SHARD_FIRING) && getSyncedTarget() != null) {
                 MiscUtil.doParticleSpray(this, getSyncedTarget(), ModParticleTypes.MOSSBACK_SHARD.get(), 15);
             } else if (DATA_ATTACK_TARGET.equals(key)) {
@@ -170,9 +176,13 @@ public class MossbackGoliath extends BaseRiftMob {
     }
 
     private static class ShardAttackGoal extends Goal {
-        private static final int SHARD_WARMUP_TICKS = 35;
+        private static final int SHARD_ANIMATION_TICKS = 35;
+        private static final int SHARD_RELEASE_TICK = 15;
+        private static final int SHARD_IMPACT_TICK = 23;
 
         private final MossbackGoliath mossback;
+        private LivingEntity attackTarget;
+        private int attackStarted;
 
         public ShardAttackGoal(MossbackGoliath mossback) {
             this.mossback = mossback;
@@ -187,26 +197,35 @@ public class MossbackGoliath extends BaseRiftMob {
                     && mossback.canAttack(target)
                     && mossback.tickCount >= mossback.nextShardTick
                     && mossback.distanceToSqr(target) < 400
+                    // Give retreating a chance, but still fire if cornered.
+                    && (mossback.distanceToSqr(target) >= 36 || mossback.tickCount >= mossback.nextShardTick + 40)
                     && mossback.getSensing().hasLineOfSight(target);
         }
 
         @Override
         public boolean canContinueToUse() {
             LivingEntity target = mossback.getTarget();
-            return mossback.shardWarmupTicks > 0 && target != null && target.isAlive() && mossback.canAttack(target);
+            return mossback.shardWarmupTicks > 0 && target != null && target == attackTarget
+                    && target.isAlive() && mossback.canAttack(target) && mossback.distanceToSqr(target) < 400
+                    && mossback.getSensing().hasLineOfSight(target);
         }
 
         @Override
         public void stop() {
             mossback.getEntityData().set(DATA_SHARD_WARMUP, false);
+            mossback.getEntityData().set(DATA_SHARD_FIRING, false);
+            mossback.shardWarmupTicks = 0;
             mossback.setSyncedTarget(null);
+            attackTarget = null;
         }
 
         @Override
         public void start() {
             mossback.getEntityData().set(DATA_SHARD_WARMUP, true);
-            mossback.shardWarmupTicks = adjustedTickDelay(SHARD_WARMUP_TICKS);
-            mossback.nextShardTick = mossback.tickCount + mossback.level().random.nextInt(80) + 20 + SHARD_WARMUP_TICKS;
+            attackTarget = mossback.getTarget();
+            attackStarted = mossback.tickCount;
+            mossback.shardWarmupTicks = SHARD_ANIMATION_TICKS;
+            mossback.nextShardTick = mossback.tickCount + mossback.level().getRandom().nextInt(80) + 20 + SHARD_ANIMATION_TICKS;
             if (mossback.getTarget() != null) {
                 mossback.getNavigation().stop();
                 mossback.getLookControl().setLookAt(mossback.getTarget(), 180f, 180f);
@@ -215,22 +234,31 @@ public class MossbackGoliath extends BaseRiftMob {
         }
 
         @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
         public void tick() {
-            LivingEntity target = mossback.getTarget();
-            if (target != null && mossback.level() instanceof ServerLevel serverLevel && mossback.getSensing().hasLineOfSight(target)) {
+            int elapsed = mossback.tickCount - attackStarted;
+            mossback.shardWarmupTicks = Math.max(0, SHARD_ANIMATION_TICKS - elapsed);
+            LivingEntity target = attackTarget;
+            if (target != null && target == mossback.getTarget() && target.isAlive() && mossback.canAttack(target)
+                    && mossback.distanceToSqr(target) < 400 && mossback.level() instanceof ServerLevel serverLevel
+                    && mossback.getSensing().hasLineOfSight(target)) {
                 mossback.lookControl.setLookAt(target, 45f, 45f);
-                --mossback.shardWarmupTicks;
-                if (mossback.shardWarmupTicks == 8) {
+                if (elapsed == SHARD_RELEASE_TICK) {
                     mossback.entityData.set(DATA_SHARD_FIRING, true);
                     mossback.firingCooldown = 4;
                     mossback.playSound(SoundEvents.WITCH_THROW, 1f, 1f);
-                } else if (mossback.shardWarmupTicks == 0) {
+                } else if (elapsed == SHARD_IMPACT_TICK) {
                     if (target.isBlocking() && target.getItemBySlot(EquipmentSlot.OFFHAND).getItem() instanceof ShieldItem) {
-                        target.level().playSound(null, target.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.HOSTILE, 1f, 1f);
+                        target.level().playSound(null, target.blockPosition(), SoundEvents.SHIELD_BLOCK.value(), SoundSource.HOSTILE, 1f, 1f);
                         target.getOffhandItem().hurtAndBreak(1, target, EquipmentSlot.OFFHAND);
                     } else {
-                        target.hurt(serverLevel.damageSources().mobAttack(mossback), 3);
-                        target.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 50 + mossback.getRandom().nextInt(40)));
+                        if (target.hurtServer(serverLevel, serverLevel.damageSources().mobAttack(mossback), 3)) {
+                            target.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 50 + mossback.getRandom().nextInt(40)));
+                        }
                     }
                 }
             }

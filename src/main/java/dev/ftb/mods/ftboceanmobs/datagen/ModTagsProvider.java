@@ -13,15 +13,13 @@ import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
 public class ModTagsProvider {
     public static class EntityType extends EntityTypeTagsProvider {
-        public EntityType(PackOutput output, CompletableFuture<HolderLookup.Provider> provider, @Nullable ExistingFileHelper existingFileHelper) {
-            super(output, provider, FTBOceanMobs.MODID, existingFileHelper);
+        public EntityType(PackOutput output, CompletableFuture<HolderLookup.Provider> provider) {
+            super(output, provider, FTBOceanMobs.MODID);
         }
 
         @Override
@@ -36,8 +34,8 @@ public class ModTagsProvider {
     }
 
     public static class Block extends BlockTagsProvider {
-        public Block(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
-            super(output, lookupProvider, FTBOceanMobs.MODID, existingFileHelper);
+        public Block(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+            super(output, lookupProvider, FTBOceanMobs.MODID);
         }
 
         @Override
@@ -65,8 +63,8 @@ public class ModTagsProvider {
     }
 
     public static class Enchantment extends EnchantmentTagsProvider {
-        public Enchantment(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
-            super(output, lookupProvider, FTBOceanMobs.MODID, existingFileHelper);
+        public Enchantment(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+            super(output, lookupProvider, FTBOceanMobs.MODID);
         }
 
         @Override

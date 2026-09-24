@@ -1,5 +1,15 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.RawAnimation;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
+import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import dev.ftb.mods.ftboceanmobs.mobai.MeleeAttackTiming;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
@@ -12,9 +22,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -30,10 +40,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class AbyssalSludge extends BaseRiftMob {
     private static final RawAnimation ANIM_ATTACK_SPLASH = RawAnimation.begin().thenPlay("attack.splash");
@@ -70,7 +76,7 @@ public class AbyssalSludge extends BaseRiftMob {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new ThrowSludgeGoal(this));
-        goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));
+        goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.0, false, MeleeAttackTiming.SLUDGE));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         goalSelector.addGoal(8, new RandomLookAroundGoal(this));
         goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
@@ -82,30 +88,35 @@ public class AbyssalSludge extends BaseRiftMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(DefaultAnimations.genericWalkIdleController(this));
-        controllers.add(new AnimationController<>(this, "Attacking", 5, this::attackState));
+        controllers.add(DefaultAnimations.genericWalkIdleController());
+        controllers.add(new AnimationController<>("Attacking", MeleeAttackTiming.TRANSITION_TICKS, this::attackState));
     }
 
-    private PlayState attackState(AnimationState<AbyssalSludge> state) {
+    private PlayState attackState(AnimationTest<AbyssalSludge> state) {
         state.setControllerSpeed(1f);
-        if (swinging) {
-            state.setControllerSpeed(2f);
-            return state.setAndContinue(DefaultAnimations.ATTACK_STRIKE);
-        } else if (getEntityData().get(DATA_SLUDGE_WARMUP)) {
+        if (getEntityData().get(DATA_SLUDGE_WARMUP)) {
             return state.setAndContinue(ANIM_ATTACK_SPLASH);
+        } else if (swinging) {
+            state.setControllerSpeed(MeleeAttackTiming.SLUDGE.animationSpeed());
+            return state.setAndContinue(DefaultAnimations.ATTACK_STRIKE);
         }
         return PlayState.STOP;
     }
 
     @Override
-    public int getCurrentSwingDuration() {
-        return entityData.get(DATA_SLUDGE_WARMUP) ? 24 : 15;
+    public float getHeadTrackingWeight() {
+        return entityData.get(DATA_SLUDGE_WARMUP) ? 0f : super.getHeadTrackingWeight();
     }
 
     @Override
-    public boolean doHurtTarget(Entity entity) {
-        if (entity instanceof LivingEntity livingEntity && super.doHurtTarget(entity)) {
-            livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 30 + entity.getRandom().nextInt(40), 3));
+    public int getCurrentSwingDuration() {
+        return entityData.get(DATA_SLUDGE_WARMUP) ? 24 : MeleeAttackTiming.SLUDGE.durationTicks();
+    }
+
+    @Override
+    public boolean doHurtTarget(ServerLevel level, Entity entity) {
+        if (entity instanceof LivingEntity livingEntity && super.doHurtTarget(level, entity)) {
+            livingEntity.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 30 + entity.getRandom().nextInt(40), 3));
             return true;
         }
         return false;
@@ -118,7 +129,7 @@ public class AbyssalSludge extends BaseRiftMob {
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
-        if (level().random.nextBoolean()) {
+        if (level().getRandom().nextBoolean()) {
             playSound(SoundEvents.SLIME_SQUISH, 1.0F, 0.75F);
         } else {
             playSound(SoundEvents.SLIME_JUMP, 1.0F, 1F);
@@ -154,7 +165,7 @@ public class AbyssalSludge extends BaseRiftMob {
                     && abyssalSludge.distanceToSqr(target) >= 25
                     && abyssalSludge.tickCount >= abyssalSludge.nextSludgeTick)
             {
-                int nSlimes = abyssalSludge.level()
+                int nSlimes = getServerLevel(abyssalSludge)
                         .getNearbyEntities(Slime.class, SLIME_COUNT_TARGETING, abyssalSludge, abyssalSludge.getBoundingBox().inflate(16.0))
                         .size();
                 return nSlimes < 12;
@@ -172,7 +183,7 @@ public class AbyssalSludge extends BaseRiftMob {
         public void start() {
             abyssalSludge.getEntityData().set(DATA_SLUDGE_WARMUP, true);
             abyssalSludge.sludgeWarmupTicks = adjustedTickDelay(SLUDGE_WARMUP_TICKS);
-            abyssalSludge.nextSludgeTick = abyssalSludge.tickCount + abyssalSludge.level().random.nextInt(40) + 40 + SLUDGE_WARMUP_TICKS;
+            abyssalSludge.nextSludgeTick = abyssalSludge.tickCount + abyssalSludge.level().getRandom().nextInt(40) + 40 + SLUDGE_WARMUP_TICKS;
         }
 
         @Override
@@ -187,13 +198,13 @@ public class AbyssalSludge extends BaseRiftMob {
                 abyssalSludge.lookControl.setLookAt(abyssalSludge.getTarget());
                 Vec3 look = abyssalSludge.getLookAngle().normalize();
                 Vec3 pos = abyssalSludge.getEyePosition().add(look.scale(0.5));
-                Sludgeling sludgeling = ModEntityTypes.SLUDGELING.get().create(serverLevel);
+                Sludgeling sludgeling = ModEntityTypes.SLUDGELING.get().create(serverLevel, EntitySpawnReason.MOB_SUMMONED);
                 if (sludgeling != null) {
                     Vec3 vec = abyssalSludge.getTarget().position().subtract(abyssalSludge.position());
                     sludgeling.setDeltaMovement(vec.scale(0.125));
-                    sludgeling.moveTo(pos, 0.0F, 0.0F);
+                    sludgeling.snapTo(pos, 0.0F, 0.0F);
                     sludgeling.setTarget(abyssalSludge.getTarget());
-                    sludgeling.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(abyssalSludge.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
+                    sludgeling.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(abyssalSludge.blockPosition()), EntitySpawnReason.MOB_SUMMONED, null);
                     sludgeling.setSize(2, false);
                     sludgeling.setHealth(sludgeling.getMaxHealth());
                     serverLevel.addFreshEntityWithPassengers(sludgeling);

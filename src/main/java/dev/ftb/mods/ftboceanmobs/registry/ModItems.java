@@ -6,7 +6,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.*;
-import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -36,33 +35,33 @@ public class ModItems {
     private static final List<DeferredItem<Item>> SPAWN_EGGS = new ArrayList<>();
 
     public static final DeferredItem<Item> RIFTLING_OBSERVER_SPAWN_EGG
-            = registerSpawnEgg("riftling_observer", ModEntityTypes.RIFTLING_OBSERVER, 0xFF63267E, 0xFFF770DC);
+            = registerSpawnEgg("riftling_observer", ModEntityTypes.RIFTLING_OBSERVER);
     public static final DeferredItem<Item> ABYSSAL_WINGED_SPAWN_EGG
-            = registerSpawnEgg("abyssal_winged", ModEntityTypes.ABYSSAL_WINGED, 0xFF462479, 0xFF903DDB);
+            = registerSpawnEgg("abyssal_winged", ModEntityTypes.ABYSSAL_WINGED);
     public static final DeferredItem<Item> CORROSIVE_CRAIG_SPAWN_EGG
-            = registerSpawnEgg("corrosive_craig", ModEntityTypes.CORROSIVE_CRAIG, 0xFF332B56, 0xFFD23AFF);
+            = registerSpawnEgg("corrosive_craig", ModEntityTypes.CORROSIVE_CRAIG);
     public static final DeferredItem<Item> MOSSBACK_GOLIATH_SPAWN_EGG
-            = registerSpawnEgg("mossback_goliath", ModEntityTypes.MOSSBACK_GOLIATH, 0xFF1D1448, 0xFFFCE5FE);
+            = registerSpawnEgg("mossback_goliath", ModEntityTypes.MOSSBACK_GOLIATH);
     public static final DeferredItem<Item> ABYSSAL_SLUDGE_SPAWN_EGG
-            = registerSpawnEgg("abyssal_sludge", ModEntityTypes.ABYSSAL_SLUDGE, 0xFF5A189E, 0xFFBB7FFF);
+            = registerSpawnEgg("abyssal_sludge", ModEntityTypes.ABYSSAL_SLUDGE);
     public static final DeferredItem<Item> SLUDGELING_SPAWN_EGG
-            = registerSpawnEgg("sludgeling", ModEntityTypes.SLUDGELING, 0xFF191134, 0xFF674DC4);
+            = registerSpawnEgg("sludgeling", ModEntityTypes.SLUDGELING);
     public static final DeferredItem<Item> SHADOW_BEAST_SPAWN_EGG
-            = registerSpawnEgg("shadow_beast", ModEntityTypes.SHADOW_BEAST, 0xFF241F3B, 0xFFE451FF);
+            = registerSpawnEgg("shadow_beast", ModEntityTypes.SHADOW_BEAST);
     public static final DeferredItem<Item> RIFT_MINOTAUR_SPAWN_EGG
-            = registerSpawnEgg("rift_minotaur", ModEntityTypes.RIFT_MINOTAUR, 0xFF520E87, 0xFFFF57FF);
+            = registerSpawnEgg("rift_minotaur", ModEntityTypes.RIFT_MINOTAUR);
     public static final DeferredItem<Item> TENTACLED_HORROR_SPAWN_EGG
-            = registerSpawnEgg("tentacled_horror", ModEntityTypes.TENTACLED_HORROR, 0xFF342455, 0xFFA466BC);
+            = registerSpawnEgg("tentacled_horror", ModEntityTypes.TENTACLED_HORROR);
     public static final DeferredItem<Item> RIFT_DEMON_SPAWN_EGG
-            = registerSpawnEgg("rift_demon", ModEntityTypes.RIFT_DEMON, 0xFF220A40, 0xFFEFAA46);
+            = registerSpawnEgg("rift_demon", ModEntityTypes.RIFT_DEMON);
     public static final DeferredItem<Item> RIFT_WEAVER_SPAWN_EGG
-            = registerSpawnEgg("rift_weaver", ModEntityTypes.RIFT_WEAVER, 0xFF220A40, 0xFFEFAA46);
+            = registerSpawnEgg("rift_weaver", ModEntityTypes.RIFT_WEAVER);
 
     public static final DeferredItem<Item> SLUDGE_BALL
-            = ITEMS.register("sludge_ball", () -> new Item(new Item.Properties()));
+            = ITEMS.registerSimpleItem("sludge_ball");
 
     public static final DeferredItem<BucketItem> ABYSSAL_WATER_BUCKET
-            = ITEMS.register("abyssal_water_bucket", () -> new BucketItem(ModFluids.ABYSSAL_WATER.get(), filledBucketProps()));
+            = ITEMS.registerItem("abyssal_water_bucket", props -> new BucketItem(ModFluids.ABYSSAL_WATER.get(), props), ModItems::filledBucketProps);
 
     static {
         ITEMS.registerSimpleBlockItem("energy_geyser", ModBlocks.ENERGY_GEYSER);
@@ -73,8 +72,8 @@ public class ModItems {
         return Collections.unmodifiableList(SPAWN_EGGS);
     }
 
-    private static DeferredItem<Item> registerSpawnEgg(String name, Supplier<? extends EntityType<? extends Mob>> type, int bgColor, int hiColor) {
-        DeferredItem<Item> egg = ITEMS.register(name + "_spawn_egg",  () -> new DeferredSpawnEggItem(type, bgColor, hiColor, new Item.Properties()));
+    private static DeferredItem<Item> registerSpawnEgg(String name, Supplier<? extends EntityType<? extends Mob>> type) {
+        DeferredItem<Item> egg = ITEMS.registerItem(name + "_spawn_egg", props -> new SpawnEggItem(props.spawnEgg(type.get())));
         SPAWN_EGGS.add(egg);
         return egg;
     }
