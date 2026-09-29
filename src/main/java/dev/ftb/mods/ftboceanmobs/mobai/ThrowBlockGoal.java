@@ -50,7 +50,7 @@ public class ThrowBlockGoal extends Goal {
         target = mob.getTarget();
 
         return target != null && target.isAlive()
-                && mob.level().random.nextFloat() < throwChance
+                && mob.level().getRandom().nextFloat() < throwChance
                 && (mob.distanceToSqr(target) > 256 || !MiscUtil.canPathfindToTarget(mob, target, 2.25F));
     }
 

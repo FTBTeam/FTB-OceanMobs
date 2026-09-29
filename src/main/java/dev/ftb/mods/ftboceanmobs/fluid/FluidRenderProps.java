@@ -18,12 +18,11 @@
 package dev.ftb.mods.ftboceanmobs.fluid;
 
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraft.resources.Identifier;
 
-public class FluidRenderProps implements IClientFluidTypeExtensions {
-    private final ResourceLocation still;
-    private final ResourceLocation flowing;
+public class FluidRenderProps {
+    private final Identifier still;
+    private final Identifier flowing;
     private final int colorTint;
 
     public FluidRenderProps(String still, String flowing) {
@@ -31,22 +30,19 @@ public class FluidRenderProps implements IClientFluidTypeExtensions {
     }
 
     public FluidRenderProps(String still, String flowing, int colorTint) {
-        this.still = still.indexOf(':') > 0 ? ResourceLocation.parse(still) : FTBOceanMobs.id("block/fluid/" + still);
-        this.flowing = flowing.indexOf(':') > 0 ? ResourceLocation.parse(flowing) : FTBOceanMobs.id("block/fluid/" + flowing);
+        this.still = still.indexOf(':') > 0 ? Identifier.parse(still) : FTBOceanMobs.id("block/fluid/" + still);
+        this.flowing = flowing.indexOf(':') > 0 ? Identifier.parse(flowing) : FTBOceanMobs.id("block/fluid/" + flowing);
         this.colorTint = colorTint;
     }
 
-    @Override
-    public ResourceLocation getStillTexture() {
+    public Identifier getStillTexture() {
         return still;
     }
 
-    @Override
-    public ResourceLocation getFlowingTexture() {
+    public Identifier getFlowingTexture() {
         return flowing;
     }
 
-    @Override
     public int getTintColor() {
         return colorTint;
     }

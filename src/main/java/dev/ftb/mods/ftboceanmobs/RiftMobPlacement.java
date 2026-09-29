@@ -31,11 +31,11 @@ public class RiftMobPlacement {
         event.register(type, RIFT_PLACEMENT, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pred, RegisterSpawnPlacementsEvent.Operation.REPLACE);
     }
 
-    private static boolean riftSpawnRulesCheck(EntityType<? extends Monster> type, LevelAccessor level, MobSpawnType spawnType, BlockPos pos, RandomSource random) {
+    private static boolean riftSpawnRulesCheck(EntityType<? extends Monster> type, LevelAccessor level, EntitySpawnReason spawnType, BlockPos pos, RandomSource random) {
         return level.getDifficulty() != Difficulty.PEACEFUL;
     }
 
-    private static boolean noNaturalSpawn(EntityType<?> entityType, ServerLevelAccessor serverLevel, MobSpawnType spawnType, BlockPos pos, RandomSource random) {
+    private static boolean noNaturalSpawn(EntityType<?> entityType, ServerLevelAccessor serverLevel, EntitySpawnReason spawnType, BlockPos pos, RandomSource random) {
         return false;
     }
 

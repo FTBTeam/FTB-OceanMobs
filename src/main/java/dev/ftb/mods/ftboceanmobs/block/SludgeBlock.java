@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.item.ItemStack;
@@ -41,7 +42,7 @@ public class SludgeBlock extends HalfTransparentBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         if (state.getValue(DISSOLVING)) {
-            level.scheduleTick(pos, this, level.random.nextInt(10) + 20);
+            level.scheduleTick(pos, this, level.getRandom().nextInt(10) + 20);
         }
     }
 
@@ -53,13 +54,13 @@ public class SludgeBlock extends HalfTransparentBlock {
     }
 
     @Override
-    protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+    protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise) {
         if (!(entity instanceof LivingEntity) || entity.getInBlockState().is(this)) {
             entity.makeStuckInBlock(state, new Vec3(0.2F, 0.2F, 0.2F));
         }
 
-        if (entity instanceof LivingEntity && !level.isClientSide && BlockPos.containing(entity.getEyePosition()).equals(pos) && level.getGameTime() % 20 == 0) {
-            entity.hurt(level.damageSources().inWall(), 1f);
+        if (entity instanceof LivingEntity && level instanceof ServerLevel serverLevel && BlockPos.containing(entity.getEyePosition()).equals(pos) && level.getGameTime() % 20 == 0) {
+            entity.hurtServer(serverLevel, level.damageSources().inWall(), 1f);
         }
     }
 

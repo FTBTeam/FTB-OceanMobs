@@ -64,6 +64,7 @@ public class ChaseTargetGoal extends Goal {
     @Override
     public void tick() {
         mob.getLookControl().setLookAt(target);
+        ticksUntilPathRecalc = Math.max(0, ticksUntilPathRecalc - 1);
         if (ticksUntilPathRecalc == 0) {
             wantedX = target.getX();
             wantedY = target.getY();

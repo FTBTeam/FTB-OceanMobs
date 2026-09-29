@@ -1,7 +1,7 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Util;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;

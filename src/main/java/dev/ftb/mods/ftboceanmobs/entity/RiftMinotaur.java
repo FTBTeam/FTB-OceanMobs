@@ -1,5 +1,12 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
 import dev.ftb.mods.ftboceanmobs.mobai.*;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -18,6 +25,7 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.animal.cow.CowSoundVariants;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
@@ -27,13 +35,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.AnimationState;
-import software.bernie.geckolib.animation.PlayState;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowingMob {
     private static final int THROW_TICKS = 40;
@@ -78,7 +79,7 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
     protected void registerGoals() {
         goalSelector.addGoal(1, new ChargeGoal(this, 1.5f));
         goalSelector.addGoal(1, new ThrowBlockGoal(this, THROW_TICKS, PICKUP_TICKS, LAUNCH_TICKS, THROW_CHANCE));
-        goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.0, false, 16));
+        goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.0, false, MeleeAttackTiming.MINOTAUR));
 
         goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -91,8 +92,8 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "Walk/Idle", 10, state -> state.setAndContinue(state.isMoving() ? DefaultAnimations.WALK : DefaultAnimations.IDLE)));
-        controllers.add(new AnimationController<>(this, "Attacking", 5, this::attackState));
+        controllers.add(new AnimationController<>("Walk/Idle", 10, state -> state.setAndContinue(state.isMoving() ? DefaultAnimations.WALK : DefaultAnimations.IDLE)));
+        controllers.add(new AnimationController<>("Attacking", MeleeAttackTiming.TRANSITION_TICKS, this::attackState));
     }
 
     @Override
@@ -103,7 +104,7 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
     }
 
     @Override
-    public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+    public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason spawnType, @Nullable SpawnGroupData spawnGroupData) {
         populateDefaultEquipmentSlots(level.getRandom(), difficulty);
 
         @SuppressWarnings("deprecation") var data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
@@ -122,14 +123,19 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
     }
 
     @Override
-    public int getCurrentSwingDuration() {
-        return 24;
+    public float getHeadTrackingWeight() {
+        return entityData.get(DATA_STATE) != STATE_NONE ? 0f : super.getHeadTrackingWeight();
     }
 
     @Override
-    protected AABB getAttackBoundingBox() {
+    public int getCurrentSwingDuration() {
+        return MeleeAttackTiming.MINOTAUR.durationTicks();
+    }
+
+    @Override
+    protected AABB getAttackBoundingBox(double horizontalExpansion) {
         // long arms...
-        return super.getAttackBoundingBox().inflate(1.4);
+        return super.getAttackBoundingBox(horizontalExpansion).inflate(1.4);
     }
 
     @Override
@@ -139,12 +145,12 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return SoundEvents.COW_HURT;
+        return SoundEvents.COW_SOUNDS.get(CowSoundVariants.SoundSet.CLASSIC).hurtSound().value();
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.COW_DEATH;
+        return SoundEvents.COW_SOUNDS.get(CowSoundVariants.SoundSet.CLASSIC).deathSound().value();
     }
 
     @Override
@@ -152,7 +158,8 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
         return (random.nextFloat() - random.nextFloat()) * 0.2F + 0.7F;
     }
 
-    private PlayState attackState(AnimationState<RiftMinotaur> state) {
+    private PlayState attackState(AnimationTest<RiftMinotaur> state) {
+        state.setControllerSpeed(1f);
         if (isThrowing()) {
             return state.setAndContinue(DefaultAnimations.ATTACK_THROW);
         } else if (isAboutToCharge()) {
@@ -160,6 +167,7 @@ public class RiftMinotaur extends BaseRiftMob implements IChargingMob, IThrowing
         } else if (isCharging()) {
             return state.setAndContinue(DefaultAnimations.ATTACK_CHARGE);
         } else if (swinging) {
+            state.setControllerSpeed(MeleeAttackTiming.MINOTAUR.animationSpeed());
             return state.setAndContinue(DefaultAnimations.ATTACK_SWING);
         }
         return PlayState.STOP;

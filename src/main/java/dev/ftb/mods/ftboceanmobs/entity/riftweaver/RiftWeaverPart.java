@@ -1,15 +1,17 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerEntity;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.entity.PartEntity;
 
 import javax.annotation.Nullable;
@@ -30,11 +32,11 @@ public class RiftWeaverPart extends PartEntity<RiftWeaverBoss> {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag compound) {
+    protected void readAdditionalSaveData(ValueInput input) {
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag compound) {
+    protected void addAdditionalSaveData(ValueOutput output) {
     }
 
     @Override
@@ -49,8 +51,8 @@ public class RiftWeaverPart extends PartEntity<RiftWeaverBoss> {
     }
 
     @Override
-    public boolean hurt(DamageSource source, float amount) {
-        return !this.isInvulnerableTo(source) && getParent().hurt(source, amount);
+    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+        return !this.isInvulnerableToBase(source) && getParent().hurtServer(level, source, amount);
     }
 
     @Override

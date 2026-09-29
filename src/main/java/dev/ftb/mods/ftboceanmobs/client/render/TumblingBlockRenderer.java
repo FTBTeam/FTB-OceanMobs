@@ -20,62 +20,73 @@ package dev.ftb.mods.ftboceanmobs.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.ftb.mods.ftboceanmobs.entity.TumblingBlockEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.entity.state.FallingBlockRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
-public class TumblingBlockRenderer extends EntityRenderer<TumblingBlockEntity> {
+public class TumblingBlockRenderer extends EntityRenderer<TumblingBlockEntity, TumblingBlockRenderer.TumblingBlockRenderState> {
     public TumblingBlockRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
     }
 
     @Override
-    public void render(TumblingBlockEntity entity, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
-        ItemStack stack = entity.getStack();
-        if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem)) {
-            return;
-        }
-        Block block = ((BlockItem) stack.getItem()).getBlock();
-        BlockState state = block.defaultBlockState();
-        if (state.getRenderShape() == RenderShape.MODEL) {
-            Level world = entity.getCommandSenderWorld();
-            if (state != world.getBlockState(entity.blockPosition()) && state.getRenderShape() != RenderShape.INVISIBLE) {
-                matrixStackIn.pushPose();
-                if (entity.tumbleVec != null) {
-                    // spin the block on the x & z axes
-                    matrixStackIn.translate(0, 0.5, 0);
-                    float angle = ((entity.tickCount + partialTicks) * 18);
-                    matrixStackIn.mulPose(Axis.of(entity.tumbleVec).rotationDegrees(angle));
-                    matrixStackIn.translate(-0.5, -0.5, -0.5);
-                }
-
-                BlockPos blockpos = BlockPos.containing(entity.getX(), entity.getBoundingBox().maxY, entity.getZ());
-                BlockRenderDispatcher renderer = Minecraft.getInstance().getBlockRenderer();
-                BakedModel blockModel = renderer.getBlockModel(state);
-                for (RenderType type : blockModel.getRenderTypes(state, world.getRandom(), ModelData.EMPTY)) {
-                    renderer.getModelRenderer().tesselateBlock(world, blockModel, state, blockpos, matrixStackIn, bufferIn.getBuffer(type), false, world.getRandom(), state.getSeed(entity.getOrigin()), OverlayTexture.NO_OVERLAY, ModelData.EMPTY, type);
-                }
-                matrixStackIn.popPose();
-            }
-        }
+    public TumblingBlockRenderState createRenderState() {
+        return new TumblingBlockRenderState();
     }
 
     @Override
-    public ResourceLocation getTextureLocation(TumblingBlockEntity entity) {
-        return null;
+    public void extractRenderState(TumblingBlockEntity entity, TumblingBlockRenderState state, float partialTicks) {
+        super.extractRenderState(entity, state, partialTicks);
+
+        ItemStack stack = entity.getStack();
+        BlockState blockState = !stack.isEmpty() && stack.getItem() instanceof BlockItem blockItem ?
+                blockItem.getBlock().defaultBlockState() :
+                Blocks.AIR.defaultBlockState();
+        BlockPos blockpos = BlockPos.containing(entity.getX(), entity.getBoundingBox().maxY, entity.getZ());
+        state.movingBlockRenderState.randomSeedPos = entity.getOrigin();
+        state.movingBlockRenderState.blockPos = blockpos;
+        state.movingBlockRenderState.blockState = blockState;
+        if (entity.level() instanceof ClientLevel clientLevel) {
+            state.movingBlockRenderState.biome = clientLevel.getBiome(blockpos);
+            state.movingBlockRenderState.cardinalLighting = clientLevel.cardinalLighting();
+            state.movingBlockRenderState.lightEngine = clientLevel.getLightEngine();
+        }
+        state.sameAsBlockAtPos = blockState == entity.level().getBlockState(entity.blockPosition());
+        state.tumbleVec = entity.tumbleVec;
+        state.tumbleAngle = (entity.tickCount + partialTicks) * 18;
+    }
+
+    @Override
+    public void submit(TumblingBlockRenderState state, PoseStack matrixStackIn, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
+        BlockState blockState = state.movingBlockRenderState.blockState;
+        if (blockState.getRenderShape() == RenderShape.MODEL && !state.sameAsBlockAtPos) {
+            matrixStackIn.pushPose();
+            if (state.tumbleVec != null) {
+                // spin the block on the x & z axes
+                matrixStackIn.translate(0, 0.5, 0);
+                matrixStackIn.mulPose(Axis.of(state.tumbleVec).rotationDegrees(state.tumbleAngle));
+                matrixStackIn.translate(-0.5, -0.5, -0.5);
+            }
+            submitNodeCollector.submitMovingBlock(matrixStackIn, state.movingBlockRenderState);
+            matrixStackIn.popPose();
+        }
+    }
+
+    public static class TumblingBlockRenderState extends FallingBlockRenderState {
+        @Nullable
+        public Vector3f tumbleVec;
+        public float tumbleAngle;
+        public boolean sameAsBlockAtPos;
     }
 }

@@ -72,7 +72,6 @@
       ]
     }
   ],
-  "render_type": "minecraft:translucent",
   "textures": {
     "particle": "ftboceanmobs:block/sludge_block",
     "texture": "ftboceanmobs:block/sludge_block"

@@ -6,9 +6,6 @@
 			"animation_length": 6,
 			"bones": {
 				"leftarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, 14.51823, -12.30511]
@@ -467,9 +464,6 @@
 					}
 				},
 				"leftwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, 36.38318, 5.33766]
@@ -1510,9 +1504,6 @@
 					}
 				},
 				"rightarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, -14.51823, 12.30511]
@@ -2006,9 +1997,6 @@
 					}
 				},
 				"rightwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, -36.38318, -5.33766]
@@ -2178,9 +2166,6 @@
 					}
 				},
 				"head": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [12.5, 0, 0]
@@ -3312,9 +3297,6 @@
 			"animation_length": 2,
 			"bones": {
 				"leftarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, 14.51823, -12.30511]
@@ -3662,9 +3644,6 @@
 					}
 				},
 				"leftwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, 36.38318, 5.33766]
@@ -4189,9 +4168,6 @@
 					}
 				},
 				"rightarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, -14.51823, 12.30511]
@@ -4436,9 +4412,6 @@
 					}
 				},
 				"rightwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, -36.38318, -5.33766]
@@ -4533,9 +4506,6 @@
 					}
 				},
 				"head": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [12.5, 0, 0]
@@ -5061,9 +5031,6 @@
 			"animation_length": 1.5,
 			"bones": {
 				"leftarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, 14.51823, -12.30511]
@@ -5268,9 +5235,6 @@
 					}
 				},
 				"leftwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, 36.38318, 5.33766]
@@ -5774,9 +5738,6 @@
 					}
 				},
 				"rightarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, -14.51823, 12.30511]
@@ -5998,9 +5959,6 @@
 					}
 				},
 				"rightwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, -36.38318, -5.33766]
@@ -6083,9 +6041,6 @@
 					}
 				},
 				"head": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [12.5, 0, 0]
@@ -6617,9 +6572,6 @@
 			"animation_length": 2,
 			"bones": {
 				"leftarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, 14.51823, -12.30511]
@@ -6862,9 +6814,6 @@
 					}
 				},
 				"leftwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, 36.38318, 5.33766]
@@ -7380,9 +7329,6 @@
 					}
 				},
 				"rightarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, -14.51823, 12.30511]
@@ -7639,9 +7585,6 @@
 					}
 				},
 				"rightwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, -36.38318, -5.33766]
@@ -7739,9 +7682,6 @@
 					}
 				},
 				"head": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [12.5, 0, 0]
@@ -8271,9 +8211,6 @@
 			"animation_length": 2,
 			"bones": {
 				"leftarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, 14.51823, -12.30511]
@@ -8714,9 +8651,6 @@
 					}
 				},
 				"leftwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, 36.38318, 5.33766]
@@ -9247,9 +9181,6 @@
 					}
 				},
 				"rightarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, -14.51823, 12.30511]
@@ -9713,9 +9644,6 @@
 					}
 				},
 				"rightwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, -36.38318, -5.33766]
@@ -9798,9 +9726,6 @@
 					}
 				},
 				"head": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [12.5, 0, 0]
@@ -10332,9 +10257,6 @@
 			"animation_length": 2,
 			"bones": {
 				"leftarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, 14.51823, -12.30511]
@@ -10697,9 +10619,6 @@
 					}
 				},
 				"leftwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, 36.38318, 5.33766]
@@ -11221,9 +11140,6 @@
 					}
 				},
 				"rightarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, -14.51823, 12.30511]
@@ -11687,9 +11603,6 @@
 					}
 				},
 				"rightwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, -36.38318, -5.33766]
@@ -11772,9 +11685,6 @@
 					}
 				},
 				"head": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [12.5, 0, 0]
@@ -12306,9 +12216,6 @@
 			"animation_length": 4,
 			"bones": {
 				"leftarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, 14.51823, -12.30511]
@@ -12800,9 +12707,6 @@
 					}
 				},
 				"leftwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, 36.38318, 5.33766]
@@ -13390,9 +13294,6 @@
 					}
 				},
 				"rightarm": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [18.53115, -14.51823, 12.30511]
@@ -13859,9 +13760,6 @@
 					}
 				},
 				"rightwing": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [43.55002, -36.38318, -5.33766]
@@ -13992,9 +13890,6 @@
 					}
 				},
 				"head": {
-					"relative_to": {
-						"rotation": "entity"
-					},
 					"rotation": {
 						"0.0": {
 							"vector": [12.5, 0, 0]
