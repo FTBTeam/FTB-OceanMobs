@@ -5,12 +5,17 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+@EventBusSubscriber(modid = FTBOceanMobs.MODID, value = Dist.CLIENT)
 public class DataGenerators {
+    @SubscribeEvent
     public static void gatherData(GatherDataEvent.Client event) {
         event.createDatapackRegistryObjects(
                 new RegistrySetBuilder().add(Registries.ENCHANTMENT, ModEnchantmentProvider::bootstrap),

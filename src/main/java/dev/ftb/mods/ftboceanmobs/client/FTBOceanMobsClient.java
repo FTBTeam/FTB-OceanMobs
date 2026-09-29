@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.client;
 
+import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.client.particle.ItemParticleProvider;
 import dev.ftb.mods.ftboceanmobs.client.render.*;
 import dev.ftb.mods.ftboceanmobs.entity.TentacledHorror;
@@ -12,8 +13,10 @@ import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterFluidModelsEvent;
@@ -24,16 +27,17 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
-public class ClientSetup {
-    public static void onModConstruction(ModContainer modContainer, IEventBus modEventBus) {
-        modEventBus.addListener(ClientSetup::onClientSetup);
-        modEventBus.addListener(ClientSetup::registerRenderers);
-        modEventBus.addListener(ClientSetup::registerParticleProviders);
-        modEventBus.addListener(ClientSetup::registerFluidModels);
+@Mod(value = FTBOceanMobs.MODID, dist = Dist.CLIENT)
+public class FTBOceanMobsClient {
+    public FTBOceanMobsClient(IEventBus modEventBus) {
+        modEventBus.addListener(FTBOceanMobsClient::onClientSetup);
+        modEventBus.addListener(FTBOceanMobsClient::registerRenderers);
+        modEventBus.addListener(FTBOceanMobsClient::registerParticleProviders);
+        modEventBus.addListener(FTBOceanMobsClient::registerFluidModels);
 
-        NeoForge.EVENT_BUS.addListener(ClientSetup::onPlayerLeftClickEmpty);
-        NeoForge.EVENT_BUS.addListener(ClientSetup::onFogDensity);
-        NeoForge.EVENT_BUS.addListener(ClientSetup::onFogColor);
+        NeoForge.EVENT_BUS.addListener(FTBOceanMobsClient::onPlayerLeftClickEmpty);
+        NeoForge.EVENT_BUS.addListener(FTBOceanMobsClient::onFogDensity);
+        NeoForge.EVENT_BUS.addListener(FTBOceanMobsClient::onFogColor);
     }
 
     private static void onFogColor(ViewportEvent.ComputeFogColor event) {

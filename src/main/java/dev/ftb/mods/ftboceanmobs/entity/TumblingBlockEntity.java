@@ -18,7 +18,7 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import com.mojang.authlib.GameProfile;
-import dev.ftb.mods.ftboceanmobs.client.ClientUtils;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

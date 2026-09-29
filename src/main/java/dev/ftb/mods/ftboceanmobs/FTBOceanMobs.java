@@ -1,8 +1,6 @@
 package dev.ftb.mods.ftboceanmobs;
 
 import com.mojang.logging.LogUtils;
-import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
-import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
 import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
 import dev.ftb.mods.ftboceanmobs.integration.ftbchunks.FTBChunksIntegration;
@@ -17,7 +15,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -33,11 +30,6 @@ public class FTBOceanMobs {
             = ResourceKey.create(Registries.ENCHANTMENT, id("rift_disruptor"));
 
     public FTBOceanMobs(IEventBus modEventBus, ModContainer modContainer) {
-        if (FMLEnvironment.getDist().isClient()) {
-            ClientSetup.onModConstruction(modContainer, modEventBus);
-            modEventBus.addListener(DataGenerators::gatherData);
-        }
-
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
         modEventBus.addListener(this::addSpawnEggsToCreativeTab);
