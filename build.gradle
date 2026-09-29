@@ -5,7 +5,7 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.neoforged.moddev' version "${mdg_version}"
-    id "me.modmuss50.mod-publish-plugin" version "0.8.4"
+    id "me.modmuss50.mod-publish-plugin" version "2.2.1"
 }
 
 apply from: 'https://raw.githubusercontent.com/FTBTeam/mods-meta/main/gradle/changelog.gradle'
@@ -238,6 +238,8 @@ publishMods {
         accessToken = providers.environmentVariable("CURSEFORGE_KEY")
         minecraftVersions.add("${minecraft_version}")
         javaVersions.add(JavaVersion.VERSION_25)
+        client = true
+        server = true
     }
 
     curseforge("curseforgeNeoForge") {
