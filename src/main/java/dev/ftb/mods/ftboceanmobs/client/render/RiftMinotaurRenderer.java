@@ -1,83 +1,85 @@
 package dev.ftb.mods.ftboceanmobs.client.render;
 
+import com.geckolib.cache.model.GeoBone;
+import com.geckolib.constant.DataTickets;
+import com.geckolib.renderer.base.GeoRenderer;
+import com.geckolib.renderer.layer.builtin.BlockAndItemGeoLayer;
+import com.geckolib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import dev.ftb.mods.ftboceanmobs.client.model.RiftMinotaurModel;
 import dev.ftb.mods.ftboceanmobs.entity.RiftMinotaur;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import software.bernie.geckolib.cache.object.BakedGeoModel;
-import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.renderer.GeoEntityRenderer;
-import software.bernie.geckolib.renderer.layer.BlockAndItemGeoLayer;
+import org.jetbrains.annotations.Nullable;
 
-public class RiftMinotaurRenderer extends GeoEntityRenderer<RiftMinotaur> {
+import java.util.List;
+
+public class RiftMinotaurRenderer extends HeadTurningGeoRenderer<RiftMinotaur> {
     private static final String LEFT_HAND = "bone8";
     private static final String RIGHT_HAND = "bone13";
-
-    private ItemStack mainHandItem;
-    private ItemStack offhandItem;
 
     public RiftMinotaurRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new RiftMinotaurModel());
 
-        addRenderLayer(new MinotaurHeldLayer());
+        withRenderLayer(new MinotaurHeldLayer(renderManager, this));
     }
 
     public static RiftMinotaurRenderer scaled(EntityRendererProvider.Context renderManager, float scale) {
         return (RiftMinotaurRenderer) new RiftMinotaurRenderer(renderManager).withScale(scale);
     }
 
-    @Override
-    public void preRender(PoseStack poseStack, RiftMinotaur animatable, BakedGeoModel model, MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
-        super.preRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
-
-        this.mainHandItem = animatable.getMainHandItem();
-        this.offhandItem = animatable.getOffhandItem();
-    }
-
-    private class MinotaurHeldLayer extends BlockAndItemGeoLayer<RiftMinotaur> {
-        public MinotaurHeldLayer() {
-            super(RiftMinotaurRenderer.this);
+    private static class MinotaurHeldLayer extends BlockAndItemGeoLayer<RiftMinotaur, Void, LivingEntityRenderState> {
+        public MinotaurHeldLayer(EntityRendererProvider.Context context, GeoRenderer<RiftMinotaur, Void, LivingEntityRenderState> renderer) {
+            super(context, renderer);
         }
 
         @Override
-        protected ItemStack getStackForBone(GeoBone bone, RiftMinotaur animatable) {
-            return switch (bone.getName()) {
-                case LEFT_HAND -> animatable.isLeftHanded() ? mainHandItem : offhandItem;
-                case RIGHT_HAND -> animatable.isLeftHanded() ? offhandItem : mainHandItem;
-                default -> null;
-            };
+        protected List<RenderData> getRelevantBones(RiftMinotaur animatable, @Nullable Void relatedObject, LivingEntityRenderState renderState, float partialTick) {
+            ItemStack mainHandItem = animatable.getMainHandItem();
+            ItemStack offhandItem = animatable.getOffhandItem();
+            boolean leftHanded = animatable.isLeftHanded();
+
+            return List.of(
+                    itemForBone(LEFT_HAND, leftHanded ? mainHandItem : offhandItem, animatable),
+                    itemForBone(RIGHT_HAND, leftHanded ? offhandItem : mainHandItem, animatable)
+            );
+        }
+
+        private RenderData itemForBone(String boneName, ItemStack stack, RiftMinotaur animatable) {
+            return RenderData.item(boneName, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                    RenderUtil.createRenderStateForItem(stack, itemModelResolver, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, animatable));
         }
 
         @Override
-        protected ItemDisplayContext getTransformTypeForStack(GeoBone bone, ItemStack stack, RiftMinotaur animatable) {
-            return switch (bone.getName()) {
-                case LEFT_HAND, RIGHT_HAND -> ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
-                default -> ItemDisplayContext.NONE;
-            };
+        public void addRenderData(RiftMinotaur animatable, @Nullable Void relatedObject, LivingEntityRenderState renderState, float partialTick) {
+            renderState.addGeckolibData(CONTENTS, getRelevantBones(animatable, relatedObject, renderState, partialTick));
+            renderState.addGeckolibData(DataTickets.IS_LEFT_HANDED, animatable.isLeftHanded());
         }
 
         // Do some quick render modifications depending on what the item is
         @Override
-        protected void renderStackForBone(PoseStack poseStack, GeoBone bone, ItemStack stack, RiftMinotaur animatable,
-                                          MultiBufferSource bufferSource, float partialTick, int packedLight, int packedOverlay) {
-            if (stack == mainHandItem) {
+        protected void submitItemStackRender(PoseStack poseStack, GeoBone bone, ItemStackRenderState stackState, ItemDisplayContext displayContext,
+                                             LivingEntityRenderState renderState, SubmitNodeCollector renderTasks, int packedLight) {
+            boolean leftHanded = renderState.getOrDefaultGeckolibData(DataTickets.IS_LEFT_HANDED, false);
+            boolean isMainHand = bone.name().equals(LEFT_HAND) == leftHanded;
+            if (isMainHand) {
                 // the axe
                 poseStack.mulPose(Axis.XP.rotationDegrees(-90f));
                 poseStack.translate(0.2, 0.15, -0.32);
                 poseStack.scale(2f,2f, 2f);
-            } else if (stack == offhandItem) {
+            } else {
                 // a block about to be thrown
                 poseStack.mulPose(Axis.XP.rotationDegrees(-90f));
                 poseStack.translate(0, 0.125, -0.5);
                 poseStack.scale(2f,2f, 2f);
             }
 
-            super.renderStackForBone(poseStack, bone, stack, animatable, bufferSource, partialTick, packedLight, packedOverlay);
+            super.submitItemStackRender(poseStack, bone, stackState, displayContext, renderState, renderTasks, packedLight);
         }
     }
 }

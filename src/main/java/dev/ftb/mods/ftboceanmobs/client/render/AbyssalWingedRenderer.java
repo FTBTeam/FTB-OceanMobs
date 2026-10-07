@@ -1,16 +1,15 @@
 package dev.ftb.mods.ftboceanmobs.client.render;
 
+import com.geckolib.renderer.layer.builtin.AutoGlowingGeoLayer;
 import dev.ftb.mods.ftboceanmobs.client.model.AbyssalWingedModel;
 import dev.ftb.mods.ftboceanmobs.entity.AbyssalWinged;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import software.bernie.geckolib.renderer.GeoEntityRenderer;
-import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 
-public class AbyssalWingedRenderer extends GeoEntityRenderer<AbyssalWinged> {
+public class AbyssalWingedRenderer extends HeadTurningGeoRenderer<AbyssalWinged> {
     public AbyssalWingedRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new AbyssalWingedModel());
 
-        addRenderLayer(new AutoGlowingGeoLayer<>(this));
+        withRenderLayer(new AutoGlowingGeoLayer<>(this));
     }
 
     public static AbyssalWingedRenderer scaled(EntityRendererProvider.Context renderManager, float scale) {

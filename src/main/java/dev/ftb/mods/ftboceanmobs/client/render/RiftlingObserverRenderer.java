@@ -1,55 +1,73 @@
 package dev.ftb.mods.ftboceanmobs.client.render;
 
+import com.geckolib.constant.dataticket.DataTicket;
+import com.geckolib.renderer.GeoEntityRenderer;
+import com.geckolib.renderer.base.GeoRenderer;
+import com.geckolib.renderer.base.RenderPassInfo;
+import com.geckolib.renderer.layer.GeoRenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import dev.ftb.mods.ftboceanmobs.client.model.RiftlingObserverModel;
 import dev.ftb.mods.ftboceanmobs.entity.RiftlingObserver;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.cache.object.BakedGeoModel;
-import software.bernie.geckolib.renderer.GeoEntityRenderer;
-import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
-public class RiftlingObserverRenderer extends GeoEntityRenderer<RiftlingObserver> {
+public class RiftlingObserverRenderer extends GeoEntityRenderer<RiftlingObserver, LivingEntityRenderState> {
     public RiftlingObserverRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new RiftlingObserverModel());
 
-        addRenderLayer(new EyeBeamLayer());
+        withRenderLayer(new EyeBeamLayer(this));
     }
 
     // this is pretty much a rip-off of the Guardian eye beam, for now at least
-    private class EyeBeamLayer extends GeoRenderLayer<RiftlingObserver> {
-        private static final ResourceLocation GUARDIAN_BEAM_LOCATION = ResourceLocation.withDefaultNamespace("textures/entity/guardian_beam.png");
-        private static final RenderType BEAM_RENDER_TYPE = RenderType.entityCutoutNoCull(GUARDIAN_BEAM_LOCATION);
+    private static class EyeBeamLayer extends GeoRenderLayer<RiftlingObserver, Void, LivingEntityRenderState> {
+        private static final Identifier GUARDIAN_BEAM_LOCATION = Identifier.withDefaultNamespace("textures/entity/guardian/guardian_beam.png");
+        private static final RenderType BEAM_RENDER_TYPE = RenderTypes.entityCutout(GUARDIAN_BEAM_LOCATION);
+        private static final DataTicket<BeamData> BEAM_DATA = DataTicket.create("ftboceanmobs:observer_beam", BeamData.class);
 
-        public EyeBeamLayer() {
-            super(RiftlingObserverRenderer.this);
+        public EyeBeamLayer(GeoRenderer<RiftlingObserver, Void, LivingEntityRenderState> renderer) {
+            super(renderer);
         }
 
         @Override
-        public void render(PoseStack poseStack, RiftlingObserver entity, BakedGeoModel bakedModel, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
-            super.render(poseStack, animatable, bakedModel, renderType, bufferSource, buffer, partialTick, packedLight, packedOverlay);
-
+        public void addRenderData(RiftlingObserver entity, @Nullable Void relatedObject, LivingEntityRenderState renderState, float partialTick) {
             LivingEntity livingentity = entity.getSyncedGazeTarget();
             if (livingentity != null) {
-                float gazeScale = entity.getAttackAnimationScale(partialTick);
-                float gazeWarmupTime = entity.getClientSideAttackTime() + partialTick;
-                float f2 = gazeWarmupTime * 0.5F % 1.0F;
                 float eyeY = entity.getEyeHeight();
+                renderState.addGeckolibData(BEAM_DATA, new BeamData(
+                        getPosition(livingentity, (double)livingentity.getBbHeight() * 0.5, partialTick),
+                        getPosition(entity, eyeY, partialTick),
+                        eyeY,
+                        entity.getAttackAnimationScale(partialTick),
+                        entity.getClientSideAttackTime() + partialTick,
+                        entity.tickCount % 2 == 0
+                ));
+            }
+        }
+
+        @Override
+        public void submitRenderTask(RenderPassInfo<LivingEntityRenderState> renderPassInfo, SubmitNodeCollector renderTasks) {
+            BeamData beam = renderPassInfo.getGeckolibData(BEAM_DATA);
+            if (beam != null) {
+                float gazeScale = beam.gazeScale();
+                float gazeWarmupTime = beam.gazeWarmupTime();
+                float f2 = gazeWarmupTime * 0.5F % 1.0F;
+                PoseStack poseStack = renderPassInfo.poseStack();
                 poseStack.pushPose();
-                poseStack.translate(0.0F, eyeY, 0.0F);
-                Vec3 vec3 = getPosition(livingentity, (double)livingentity.getBbHeight() * 0.5, partialTick);
-                Vec3 vec31 = getPosition(entity, eyeY, partialTick);
-                Vec3 vec32 = vec3.subtract(vec31);
+                poseStack.last().set(renderPassInfo.getPreRenderMatrixPose());
+                poseStack.translate(0.0F, beam.eyeHeight(), 0.0F);
+                Vec3 vec32 = beam.targetPos().subtract(beam.eyePos());
                 float f4 = (float)(vec32.length() + 1.0);
                 vec32 = vec32.normalize();
                 float f5 = (float)Math.acos(vec32.y);
@@ -79,28 +97,28 @@ public class RiftlingObserverRenderer extends GeoEntityRenderer<RiftlingObserver
                 float f26 = Mth.sin(f7 + (float) (Math.PI * 3.0 / 2.0)) * 0.2F;
                 float f29 = -1.0F + f2;
                 float f30 = f4 * 2.5F + f29;
-                VertexConsumer vertexconsumer = bufferSource.getBuffer(BEAM_RENDER_TYPE);
-                PoseStack.Pose posestack$pose = poseStack.last();
-                vertex(vertexconsumer, posestack$pose, f19, f4, f20, red, green, blue, 0.4999F, f30);
-                vertex(vertexconsumer, posestack$pose, f19, 0.0F, f20, red, green, blue, 0.4999F, f29);
-                vertex(vertexconsumer, posestack$pose, f21, 0.0F, f22, red, green, blue, 0.0F, f29);
-                vertex(vertexconsumer, posestack$pose, f21, f4, f22, red, green, blue, 0.0F, f30);
-                vertex(vertexconsumer, posestack$pose, f23, f4, f24, red, green, blue, 0.4999F, f30);
-                vertex(vertexconsumer, posestack$pose, f23, 0.0F, f24, red, green, blue, 0.4999F, f29);
-                vertex(vertexconsumer, posestack$pose, f25, 0.0F, f26, red, green, blue, 0.0F, f29);
-                vertex(vertexconsumer, posestack$pose, f25, f4, f26, red, green, blue, 0.0F, f30);
-                float f31 = 0.0F;
-                if (entity.tickCount % 2 == 0) {
-                    f31 = 0.5F;
-                }
+                float f31 = beam.evenTick() ? 0.5F : 0.0F;
+                renderTasks.submitCustomGeometry(poseStack, BEAM_RENDER_TYPE, (posestack$pose, vertexconsumer) -> {
+                    vertex(vertexconsumer, posestack$pose, f19, f4, f20, red, green, blue, 0.4999F, f30);
+                    vertex(vertexconsumer, posestack$pose, f19, 0.0F, f20, red, green, blue, 0.4999F, f29);
+                    vertex(vertexconsumer, posestack$pose, f21, 0.0F, f22, red, green, blue, 0.0F, f29);
+                    vertex(vertexconsumer, posestack$pose, f21, f4, f22, red, green, blue, 0.0F, f30);
+                    vertex(vertexconsumer, posestack$pose, f23, f4, f24, red, green, blue, 0.4999F, f30);
+                    vertex(vertexconsumer, posestack$pose, f23, 0.0F, f24, red, green, blue, 0.4999F, f29);
+                    vertex(vertexconsumer, posestack$pose, f25, 0.0F, f26, red, green, blue, 0.0F, f29);
+                    vertex(vertexconsumer, posestack$pose, f25, f4, f26, red, green, blue, 0.0F, f30);
 
-                vertex(vertexconsumer, posestack$pose, f11, f4, f12, red, green, blue, 0.5F, f31 + 0.5F);
-                vertex(vertexconsumer, posestack$pose, f13, f4, f14, red, green, blue, 1.0F, f31 + 0.5F);
-                vertex(vertexconsumer, posestack$pose, f17, f4, f18, red, green, blue, 1.0F, f31);
-                vertex(vertexconsumer, posestack$pose, f15, f4, f16, red, green, blue, 0.5F, f31);
+                    vertex(vertexconsumer, posestack$pose, f11, f4, f12, red, green, blue, 0.5F, f31 + 0.5F);
+                    vertex(vertexconsumer, posestack$pose, f13, f4, f14, red, green, blue, 1.0F, f31 + 0.5F);
+                    vertex(vertexconsumer, posestack$pose, f17, f4, f18, red, green, blue, 1.0F, f31);
+                    vertex(vertexconsumer, posestack$pose, f15, f4, f16, red, green, blue, 0.5F, f31);
+                });
                 poseStack.popPose();
             }
         }
+    }
+
+    private record BeamData(Vec3 targetPos, Vec3 eyePos, float eyeHeight, float gazeScale, float gazeWarmupTime, boolean evenTick) {
     }
 
     private static Vec3 getPosition(LivingEntity livingEntity, double yOffset, float partialTick) {
@@ -115,7 +133,7 @@ public class RiftlingObserverRenderer extends GeoEntityRenderer<RiftlingObserver
                 .setColor(red, green, blue, 255)
                 .setUv(u, v)
                 .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(LightTexture.FULL_BRIGHT)
+                .setLight(LightCoordsUtil.FULL_BRIGHT)
                 .setNormal(pose, 0.0F, 1.0F, 0.0F);
     }
 }

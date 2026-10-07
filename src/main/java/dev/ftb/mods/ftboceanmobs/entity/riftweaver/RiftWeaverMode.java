@@ -1,6 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
-import software.bernie.geckolib.animation.RawAnimation;
+import com.geckolib.animation.RawAnimation;
 
 public abstract class RiftWeaverMode {
     private final String name;

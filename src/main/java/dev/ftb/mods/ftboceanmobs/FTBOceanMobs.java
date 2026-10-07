@@ -1,15 +1,13 @@
 package dev.ftb.mods.ftboceanmobs;
 
 import com.mojang.logging.LogUtils;
-import dev.ftb.mods.ftboceanmobs.client.ClientSetup;
-import dev.ftb.mods.ftboceanmobs.datagen.DataGenerators;
 import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
 import dev.ftb.mods.ftboceanmobs.integration.ftbchunks.FTBChunksIntegration;
 import dev.ftb.mods.ftboceanmobs.registry.*;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -17,7 +15,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -33,13 +30,8 @@ public class FTBOceanMobs {
             = ResourceKey.create(Registries.ENCHANTMENT, id("rift_disruptor"));
 
     public FTBOceanMobs(IEventBus modEventBus, ModContainer modContainer) {
-        if (FMLEnvironment.dist.isClient()) {
-            ClientSetup.onModConstruction(modContainer, modEventBus);
-        }
-
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
-        modEventBus.addListener(DataGenerators::gatherData);
         modEventBus.addListener(this::addSpawnEggsToCreativeTab);
         modEventBus.addListener(this::registerEntityAttributes);
         modEventBus.addListener(RiftMobPlacement::registerSpawnPlacements);
@@ -51,8 +43,8 @@ public class FTBOceanMobs {
         FTBChunksIntegration.init();
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MODID, path);
     }
 
     private void registerEntityAttributes(EntityAttributeCreationEvent event) {

@@ -11,11 +11,12 @@ import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverModes;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -31,7 +32,7 @@ public class ModCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext ignoredBuildContext) {
         dispatcher.register(literal(FTBOceanMobs.MODID)
                 .then(literal("weavertest")
-                        .requires(cs -> cs.hasPermission(2))
+                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                         .then(literal("mode")
                                 .then(argument("modename", StringArgumentType.word())
                                         .suggests((context, builder) -> SharedSuggestionProvider.suggest(RiftWeaverModes.sortedNames(), builder))
@@ -88,7 +89,7 @@ public class ModCommands {
                         weaver.level().setBlock(new BlockPos(x, y + k, z), Blocks.GOLD_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
                     }
                 } else if (d < Config.arenaRadiusSq - 48) {
-                    if (weaver.level().random.nextInt(100) == 0) {
+                    if (weaver.level().getRandom().nextInt(100) == 0) {
                         weaver.level().setBlock(new BlockPos(x, y, z), Blocks.SPONGE.defaultBlockState(), Block.UPDATE_ALL);
                     } else {
                         weaver.level().setBlock(new BlockPos(x, y, z), Blocks.WATER.defaultBlockState(), Block.UPDATE_ALL);
@@ -102,7 +103,7 @@ public class ModCommands {
     }
 
     private static RiftWeaverBoss findWeaver(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        Player player = ctx.getSource().getPlayerOrException();
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
         RiftWeaverBoss boss = player.level().getNearestEntity(RiftWeaverBoss.class, TargetingConditions.DEFAULT,
                 player, player.getX(), player.getY(), player.getZ(), new AABB(player.blockPosition()).inflate(100));
         if (boss == null) {

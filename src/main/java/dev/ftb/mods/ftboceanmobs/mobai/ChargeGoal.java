@@ -20,6 +20,11 @@ public class ChargeGoal extends Goal {
     private static final double MAX_CHARGE_RANGE_SQ = 15.0 * 15.0;
     private static final float CHARGE_CHANCE = 0.12f;
     private static final int WARMUP_TICKS = 40;
+    private static final int MAX_CHARGE_TICKS = 40;
+    private static final int RECOVERY_TICKS = 20;
+    private static final int COOLDOWN_TICKS = 60;
+
+    private enum Phase { WARMUP, CHARGING, RECOVERY }
 
     private final PathfinderMob mob;
     private final boolean canBreakBlocks;
@@ -27,7 +32,9 @@ public class ChargeGoal extends Goal {
 
     private LivingEntity target;
     private Vec3 chargePos;
-    private int chargeWarmup;
+    private Phase phase;
+    private int phaseEndTick;
+    private int nextChargeTick;
     private boolean chargeSwipeDone;
 
     public ChargeGoal(PathfinderMob mob, float speed) {
@@ -40,12 +47,12 @@ public class ChargeGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (isStandingInFluid()) {
+        if (mob.tickCount < nextChargeTick || isStandingInFluid()) {
             return false;
         }
         target = mob.getTarget();
 
-        if (target == null) {
+        if (target == null || !target.isAlive() || !mob.canAttack(target)) {
             return false;
         }
 
@@ -57,55 +64,83 @@ public class ChargeGoal extends Goal {
                 || !MiscUtil.canPathfindToTarget(mob, target, 2.25F)) {
             return false;
         }
-        chargePos = calcChargePos(mob, target);
         return true;
     }
 
     @Override
     public boolean canContinueToUse() {
-        return target.isAlive() && mob.canAttack(target)
-                && !isStandingInFluid()
-                && (chargeWarmup > 0 || !mob.getNavigation().isDone());
+        return target != null && target == mob.getTarget() && target.isAlive() && mob.canAttack(target)
+                && !isStandingInFluid() && (phase != Phase.RECOVERY || mob.tickCount < phaseEndTick);
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
     }
 
     @Override
     public void start() {
-        chargeWarmup = adjustedTickDelay(WARMUP_TICKS);
-        mob.setSprinting(true);
-        if (mob instanceof IChargingMob c) {
-            c.setWarmingUp();
-        }
+        phase = Phase.WARMUP;
+        phaseEndTick = mob.tickCount + WARMUP_TICKS;
+        chargeSwipeDone = false;
+        mob.setSprinting(false);
+        stopMovement();
+        if (mob instanceof IChargingMob c) c.setWarmingUp();
     }
 
     @Override
     public void stop() {
-        chargeWarmup = 0;
+        stopMovement();
         target = null;
-        chargeSwipeDone = false;
+        chargePos = null;
+        nextChargeTick = mob.tickCount + COOLDOWN_TICKS;
         mob.setSprinting(false);
-        if (mob instanceof IChargingMob c) {
-            c.resetCharging();
-        }
+        if (mob instanceof IChargingMob c) c.resetCharging();
+    }
+
+    private void stopMovement() {
+        mob.getNavigation().stop();
+        mob.setDeltaMovement(mob.getDeltaMovement().multiply(0, 1, 0));
+    }
+
+    private void beginRecovery() {
+        phase = Phase.RECOVERY;
+        phaseEndTick = mob.tickCount + RECOVERY_TICKS;
+        mob.setSprinting(false);
+        stopMovement();
+        if (mob instanceof IChargingMob c) c.resetCharging();
     }
 
     @Override
     public void tick() {
-        mob.getLookControl().setLookAt(chargePos.x(), chargePos.y() - 1, chargePos.z(), 10.0F, mob.getMaxHeadXRot());
+        if (phase == Phase.RECOVERY) {
+            stopMovement();
+            return;
+        }
+        if (phase == Phase.WARMUP) {
+            stopMovement();
+            mob.getLookControl().setLookAt(target, 10f, mob.getMaxHeadXRot());
+            if (mob.tickCount < phaseEndTick) return;
 
-        if (--chargeWarmup > 0) {
-            // warming up...
-            mob.walkAnimation.setSpeed(mob.walkAnimation.speed() + 0.8f);
-        } else {
-            // charge!
-            if (mob instanceof IChargingMob c) {
-                c.setActuallyCharging();
-            }
-            // recalc here since player has had plenty time to move during warmup...
+            // Aim once at launch. The player can now dodge this committed path.
             chargePos = calcChargePos(mob, target);
-            mob.getNavigation().moveTo(chargePos.x(), chargePos.y(), chargePos.z(), speed);
+            phase = Phase.CHARGING;
+            phaseEndTick = mob.tickCount + MAX_CHARGE_TICKS;
+            mob.setSprinting(true);
+            if (mob instanceof IChargingMob c) c.setActuallyCharging();
+            if (!mob.getNavigation().moveTo(chargePos.x, chargePos.y, chargePos.z, speed)) {
+                beginRecovery();
+                return;
+            }
         }
 
-        if (canBreakBlocks && EventHooks.canEntityGrief(mob.level(), mob)) {
+        if (mob.tickCount >= phaseEndTick || mob.getNavigation().isDone() || mob.position().distanceToSqr(chargePos) < 1) {
+            beginRecovery();
+            return;
+        }
+        mob.getLookControl().setLookAt(chargePos.x, mob.getEyeY(), chargePos.z, 10f, mob.getMaxHeadXRot());
+
+        if (canBreakBlocks && EventHooks.canEntityGrief(getServerLevel(mob), mob)) {
             AABB aabb = mob.getBoundingBox().inflate(0.8, 0.0, 0.8).move(0.0, 1.1, 0.0);
             BlockPos min = BlockPos.containing(aabb.getMinPosition());
             BlockPos max = BlockPos.containing(aabb.getMaxPosition());
@@ -120,8 +155,8 @@ public class ChargeGoal extends Goal {
 
         double rangeSq = mob.getBbWidth() * 2.0F * mob.getBbWidth() * 2.0F + target.getBbWidth();
         if (mob.distanceToSqr(target.getX(), target.getBoundingBox().minY, target.getZ()) <= rangeSq) {
-            if (!chargeSwipeDone) {
-                mob.doHurtTarget(target);
+            if (!chargeSwipeDone && mob.getSensing().hasLineOfSight(target)) {
+                mob.doHurtTarget(getServerLevel(mob), target);
                 chargeSwipeDone = true;
             }
         }

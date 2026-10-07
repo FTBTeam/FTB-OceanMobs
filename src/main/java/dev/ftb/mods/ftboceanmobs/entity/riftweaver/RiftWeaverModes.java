@@ -1,5 +1,6 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
+import com.geckolib.animation.RawAnimation;
 import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import dev.ftb.mods.ftboceanmobs.registry.ModFluids;
@@ -13,10 +14,10 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,7 +25,6 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import software.bernie.geckolib.animation.RawAnimation;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -115,12 +115,12 @@ public class RiftWeaverModes {
                 boss.getMoveControl().setWantedPosition(tgt.getX(), tgt.getY(), tgt.getZ(), 10f);
             }
 
-            if (modeTicksRemaining == 5) {
+            if (modeTicksRemaining == 5 && boss.level() instanceof ServerLevel serverLevel) {
                 // hurt all targets in a wide area in front of the weaver
                 boss.playSound(ModSounds.RIFT_DEMON_ATTACK.get());
-                for (LivingEntity e : boss.level().getNearbyEntities(LivingEntity.class, RiftWeaverBoss.NOT_RIFT_MOBS, boss, new AABB(boss.blockPosition()).inflate(8))) {
+                for (LivingEntity e : serverLevel.getNearbyEntities(LivingEntity.class, RiftWeaverBoss.NOT_RIFT_MOBS, boss, new AABB(boss.blockPosition()).inflate(8))) {
                     if (MiscUtil.isLookingAtMe(e, boss, 0.9)) {
-                        boss.doHurtTarget(e);
+                        boss.doHurtTarget(serverLevel, e);
                         if (boss.isFrenzied() && boss.getRandom().nextBoolean()) {
                             e.addEffect(new MobEffectInstance(MobEffects.WITHER, 20 + boss.getRandom().nextInt(40), 2));
                         }
@@ -176,7 +176,7 @@ public class RiftWeaverModes {
 
             if (modeTicksRemaining == 10) {
                 boss.level().explode(boss, boss.getX(), boss.getY(), boss.getZ(), 2f, Level.ExplosionInteraction.MOB);
-                boss.seismicSmasher = new SeismicSmasher(boss.level(), boss.blockPosition(),
+                boss.seismicSmasher = new SeismicSmasher(boss, boss.blockPosition(),
                         Config.arenaRadius - 2, 5, boss::isInArena);
             }
         }
@@ -262,7 +262,7 @@ public class RiftWeaverModes {
                     Vec3 vec = Vec3.atBottomCenterOf(reinfSpawnPos);
 
                     if (level.noCollision(entityType.getSpawnAABB(vec.x, vec.y, vec.z))) {
-                        if (entityType.spawn((ServerLevel) level, null, reinfSpawnPos, MobSpawnType.REINFORCEMENT,
+                        if (entityType.spawn((ServerLevel) level, null, reinfSpawnPos, EntitySpawnReason.REINFORCEMENT,
                                 false, false) != null) {
                             level.gameEvent(boss, GameEvent.ENTITY_PLACE, reinfSpawnPos);
                             LightningBolt bolt = new LightningBolt(EntityType.LIGHTNING_BOLT, level);

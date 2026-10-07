@@ -4,6 +4,7 @@ import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.entity.*;
 import dev.ftb.mods.ftboceanmobs.entity.riftweaver.RiftWeaverBoss;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -60,7 +61,7 @@ public class ModEntityTypes {
     }
 
     private static <E extends Entity> Supplier<EntityType<E>> register(final String name, final Supplier<EntityType.Builder<E>> sup) {
-        return ENTITY_TYPES.register(name, () -> sup.get().build(name));
+        return ENTITY_TYPES.register(name, id -> sup.get().build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
     }
 
     private static EntityType.Builder<RiftlingObserver> riftlingObserver() {

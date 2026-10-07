@@ -18,7 +18,7 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
 import com.mojang.authlib.GameProfile;
-import dev.ftb.mods.ftboceanmobs.client.ClientUtils;
+import dev.ftb.mods.ftblibrary.client.util.ClientUtils;
 import dev.ftb.mods.ftboceanmobs.registry.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -40,11 +40,13 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.*;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.common.util.FakePlayer;
@@ -93,7 +95,7 @@ public class TumblingBlockEntity extends ThrowableProjectile {
     private Vector3f makeTumbleVec(Level world, LivingEntity thrower) {
         if (thrower != null) {
             return thrower.getLookAngle().cross(Y_POS).toVector3f();
-        } else if (world != null && world.isClientSide) {
+        } else if (world != null && world.isClientSide()) {
             return ClientUtils.getOptionalClientPlayer()
                     .map(p -> p.getLookAngle().cross(Y_POS).toVector3f())
                     .orElse(null);
@@ -116,6 +118,33 @@ public class TumblingBlockEntity extends ThrowableProjectile {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(ORIGIN, BlockPos.ZERO);
         builder.define(STATE_STACK, ItemStack.EMPTY);
+    }
+
+    @Override
+    protected void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.store("BlockStack", ItemStack.OPTIONAL_CODEC, getStack());
+        output.store("Origin", BlockPos.CODEC, getOrigin());
+        output.putString("HitBehaviour", hitBehaviour.name());
+        output.putBoolean("CanDropItem", canDropItem);
+        output.putInt("Age", tickCount);
+    }
+
+    @Override
+    protected void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        entityData.set(STATE_STACK, input.read("BlockStack", ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY));
+        setOrigin(input.read("Origin", BlockPos.CODEC).orElse(blockPosition()));
+        hitBehaviour = HitBehaviour.SHATTER;
+        String savedBehaviour = input.getStringOr("HitBehaviour", "SHATTER");
+        for (HitBehaviour behaviour : HitBehaviour.values()) {
+            if (behaviour.name().equals(savedBehaviour)) {
+                hitBehaviour = behaviour;
+                break;
+            }
+        }
+        canDropItem = input.getBooleanOr("CanDropItem", true);
+        tickCount = Math.max(0, input.getIntOr("Age", 0));
     }
 
     @Override
@@ -142,13 +171,17 @@ public class TumblingBlockEntity extends ThrowableProjectile {
 
     @Override
     public void tick() {
+        if (!level().isClientSide() && !(getStack().getItem() instanceof BlockItem)) {
+            discard();
+            return;
+        }
         this.xo = this.getX();
         this.yo = this.getY();
         this.zo = this.getZ();
 
         super.tick();  // handles nearly all the in-flight logic
 
-        if (!level().isClientSide) {
+        if (!level().isClientSide()) {
             BlockPos pos = blockPosition();
             if (!onGround() && (tickCount > 100 && (pos.getY() < 1 || pos.getY() > 256) || tickCount > 600)) {
                 dropAsItem();
@@ -159,7 +192,7 @@ public class TumblingBlockEntity extends ThrowableProjectile {
 
     @Override
     protected void onHit(HitResult result) {
-        if (!level().isClientSide) {
+        if (!level().isClientSide()) {
             discard();
             switch (hitBehaviour) {
                 case PLACE_BLOCK -> {
@@ -177,8 +210,10 @@ public class TumblingBlockEntity extends ThrowableProjectile {
                 case DROP_ITEM -> dropAsItem();
                 case SHATTER -> shatter();
             }
-            level().getEntities(this, getBoundingBox().inflate(1.0), EntitySelector.LIVING_ENTITY_STILL_ALIVE)
-                    .forEach(e -> e.hurt(level().damageSources().fallingBlock(this), 6f));
+            if (level() instanceof ServerLevel serverLevel) {
+                level().getEntities(this, getBoundingBox().inflate(1.0), EntitySelector.LIVING_ENTITY_STILL_ALIVE)
+                        .forEach(e -> e.hurtServer(serverLevel, serverLevel.damageSources().fallingBlock(this), 6f));
+            }
         }
     }
 
@@ -214,12 +249,19 @@ public class TumblingBlockEntity extends ThrowableProjectile {
         Player placer = getOwner() instanceof Player p ? p : getFakePlayer();
 
         int placed = 0;
-        for (BlockPos pos : BlockPos.randomBetweenClosed(level().random, 1,
+        for (BlockPos pos : BlockPos.randomBetweenClosed(level().getRandom(), 1,
                 Mth.floor(aabb.minX), Mth.floor(aabb.minY), Mth.floor(aabb.minZ),
                 Mth.floor(aabb.maxX), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ))) {
+            BlockState state = level().getBlockState(pos);
+            BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
+            BlockPlaceContext context = new BlockPlaceContext(level(), placer, InteractionHand.MAIN_HAND, stack, hit);
+            if (!state.canBeReplaced(context) || state.getDestroySpeed(level(), pos) < 0
+                    || level().getBlockEntity(pos) != null || !level().isInWorldBounds(pos)) {
+                continue;
+            }
             BlockSnapshot snapshot = BlockSnapshot.create(level().dimension(), level(), pos);
-            if (!EventHooks.onBlockPlace(placer, snapshot, Direction.UP)) {
-                level().setBlock(pos, blockItem.getBlock().defaultBlockState(), Block.UPDATE_ALL);
+            if (!EventHooks.onBlockPlace(placer, snapshot, Direction.UP)
+                    && level().setBlock(pos, blockItem.getBlock().defaultBlockState(), Block.UPDATE_ALL)) {
                 placed++;
             }
         }
@@ -228,8 +270,8 @@ public class TumblingBlockEntity extends ThrowableProjectile {
     }
 
     private void dropAsItem() {
-        if (canDropItem && this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
-            spawnAtLocation(getStack().copy(), 0.0F);
+        if (canDropItem && this.level() instanceof ServerLevel serverLevel && serverLevel.getGameRules().get(GameRules.ENTITY_DROPS)) {
+            spawnAtLocation(serverLevel, getStack().copy(), 0.0F);
         } else {
             shatter();
         }

@@ -1,5 +1,13 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.RawAnimation;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.mobai.ChaseTargetGoal;
 import dev.ftb.mods.ftboceanmobs.registry.ModParticleTypes;
@@ -10,6 +18,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -48,11 +57,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimationState;
-import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -134,9 +138,14 @@ public class TentacledHorror extends BaseRiftMob {
     }
 
     @Override
+    public float getHeadTrackingWeight() {
+        return getAttackState() == AttackState.NONE ? super.getHeadTrackingWeight() : 0f;
+    }
+
+    @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "Walk/Idle", 10, this::walkIdleState));
-        controllers.add(new AnimationController<>(this, "Attacking", 5, this::attackState));
+        controllers.add(new AnimationController<>("Walk/Idle", 10, this::walkIdleState));
+        controllers.add(new AnimationController<>("Attacking", 5, this::attackState));
     }
 
     public boolean hasSyncedTarget() {
@@ -151,7 +160,7 @@ public class TentacledHorror extends BaseRiftMob {
     public LivingEntity getSyncedTarget() {
         if (!this.hasSyncedTarget()) {
             return null;
-        } else if (this.level().isClientSide) {
+        } else if (this.level().isClientSide()) {
             if (this.clientSideCachedAttackTarget != null) {
                 return this.clientSideCachedAttackTarget;
             } else {
@@ -169,15 +178,15 @@ public class TentacledHorror extends BaseRiftMob {
     }
 
     @Override
-    protected AABB makeBoundingBox() {
-        return super.makeBoundingBox().inflate(0.4, 0.0, 0.4);
+    protected AABB makeBoundingBox(Vec3 position) {
+        return super.makeBoundingBox(position).inflate(0.4, 0.0, 0.4);
     }
 
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
 
-        if (level().isClientSide) {
+        if (level().isClientSide()) {
             if (DATA_INK_SPRAY.equals(key) && entityData.get(DATA_INK_SPRAY) && getSyncedTarget() != null) {
                 MiscUtil.doParticleSpray(this, getSyncedTarget(), ModParticleTypes.HORROR_INK.get(), 50);
             } else if (DATA_ATTACK_TARGET.equals(key)) {
@@ -187,21 +196,22 @@ public class TentacledHorror extends BaseRiftMob {
     }
 
     @Override
-    public boolean isInvulnerableTo(DamageSource source) {
-        return super.isInvulnerableTo(source) || source.is(DamageTypes.WITHER);
+    public boolean isInvulnerableTo(ServerLevel level, DamageSource source) {
+        return super.isInvulnerableTo(level, source) || source.is(DamageTypes.WITHER);
     }
 
     @Override
-    public boolean hurt(DamageSource source, float amount) {
-        if (super.hurt(source, amount)) {
+    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+        boolean hurt = super.hurtServer(level, source, amount);
+        if (hurt) {
             if (getAttackState().isGrabbing() && (source.is(DamageTypeTags.IS_FIRE) || random.nextInt(8) == 0)) {
                 setAttackState(AttackState.GRAB_BREAK);
             }
         }
-        return false;
+        return hurt;
     }
 
-    private PlayState walkIdleState(AnimationState<TentacledHorror> state) {
+    private PlayState walkIdleState(AnimationTest<TentacledHorror> state) {
         if (state.isMoving()) {
             state.setAnimation(DefaultAnimations.WALK);
             state.setControllerSpeed(1.5f);
@@ -212,7 +222,7 @@ public class TentacledHorror extends BaseRiftMob {
         return PlayState.CONTINUE;
     }
 
-    private PlayState attackState(AnimationState<TentacledHorror> state) {
+    private PlayState attackState(AnimationTest<TentacledHorror> state) {
         return getAttackState().playState(state);
     }
 
@@ -316,7 +326,7 @@ public class TentacledHorror extends BaseRiftMob {
         @Override
         public void stop() {
             horror.setAttackState(AttackState.NONE);
-            target.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+            target.removeEffect(MobEffects.SLOWNESS);
         }
 
         @Override
@@ -332,7 +342,7 @@ public class TentacledHorror extends BaseRiftMob {
                         if (target != null && target.isAlive() && ableToGrab()) {
                             // do the grab!
                             horror.setAttackState(AttackState.GRAB_HOLD);
-                            target.startRiding(horror, true);
+                            target.startRiding(horror, true, true);
                         } else {
                             // player got out of the way during warmup?
                             horror.setAttackState(AttackState.GRAB_BREAK);
@@ -343,20 +353,20 @@ public class TentacledHorror extends BaseRiftMob {
                     if (target.getRandom().nextInt(20) == 0) {
                         // some crushing damage to the player periodically
                         horror.playSound(ModSounds.TENTACLED_HORROR_SQUEEZE.get(), 1f, 0.8f + horror.random.nextFloat() * 0.4f);
-                        target.hurt(target.level().damageSources().mobAttack(horror), 8f);
+                        target.hurtServer(getServerLevel(horror), target.level().damageSources().mobAttack(horror), 8f);
                     }
                     if (horror.random.nextInt(100) == 0) {
                         // sometimes just let go
                         horror.setAttackState(AttackState.GRAB_BREAK);
                     } else {
-                        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 5, false, false));
+                        target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 20, 5, false, false));
                         target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, WARMUP_TIME, 3, false, false));
                     }
                 }
                 case GRAB_BREAK -> {
                     if (target.getVehicle() == horror) {
                         // let go and yeet the player in a random direction
-                        target.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                        target.removeEffect(MobEffects.SLOWNESS);
                         target.stopRiding();
                         target.setOnGround(false);
                         RandomSource r = horror.random;
@@ -463,7 +473,7 @@ public class TentacledHorror extends BaseRiftMob {
             } else if (tickCounter == 6) {
                 inkTarget = inkTarget.lerp(target.position(), 0.7);
                 AreaEffectCloud cloud = new AreaEffectCloud(target.level(), inkTarget.x, inkTarget.y, inkTarget.z);
-                cloud.setPotionContents(new PotionContents(Optional.empty(), Optional.of(0xFF000000), List.of()));
+                cloud.setPotionContents(new PotionContents(Optional.empty(), Optional.of(0xFF000000), List.of(), Optional.empty()));
                 cloud.setOwner(horror);
                 cloud.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 0));
                 cloud.addEffect(new MobEffectInstance(MobEffects.WITHER, 40, 0));
@@ -514,7 +524,7 @@ public class TentacledHorror extends BaseRiftMob {
             return (byte) ordinal();
         }
 
-        PlayState playState(AnimationState<TentacledHorror> aState) {
+        PlayState playState(AnimationTest<TentacledHorror> aState) {
             if (aState == null || this == NONE) {
                 return PlayState.STOP;
             }

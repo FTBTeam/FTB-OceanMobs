@@ -1,22 +1,31 @@
 package dev.ftb.mods.ftboceanmobs.entity.riftweaver;
 
+import com.geckolib.animatable.GeoEntity;
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.RawAnimation;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
+import com.mojang.serialization.Codec;
 import dev.ftb.mods.ftboceanmobs.Config;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobs;
 import dev.ftb.mods.ftboceanmobs.FTBOceanMobsTags;
+import dev.ftb.mods.ftboceanmobs.entity.AnimatedHeadTracking;
 import dev.ftb.mods.ftboceanmobs.entity.BaseRiftMob;
 import dev.ftb.mods.ftboceanmobs.mobai.RandomAttackableTargetGoal;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -40,16 +49,19 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
-import net.minecraft.world.entity.projectile.DragonFireball;
-import net.minecraft.world.entity.projectile.LargeFireball;
-import net.minecraft.world.entity.projectile.SmallFireball;
+import net.minecraft.world.entity.projectile.hurtingprojectile.AbstractHurtingProjectile;
+import net.minecraft.world.entity.projectile.hurtingprojectile.DragonFireball;
+import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
+import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -58,16 +70,13 @@ import net.neoforged.neoforge.entity.PartEntity;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import software.bernie.geckolib.animatable.GeoEntity;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
-import javax.annotation.Nullable;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
-public class RiftWeaverBoss extends Monster implements GeoEntity {
+public class RiftWeaverBoss extends Monster implements GeoEntity, AnimatedHeadTracking {
     public static final int ARENA_HEIGHT = 32;
     public static final int MAX_ROAM_HEIGHT = 7;
 
@@ -81,12 +90,12 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     public static final RawAnimation FRENZY_ANIMATION = RawAnimation.begin().thenPlay("attack.riftclaw_frenzy");
     public static final RawAnimation CHAINS_ANIMATION = RawAnimation.begin().thenPlay("attack.chains");
 
-    private static final ResourceLocation FRENZY_DMG_ID = FTBOceanMobs.id("frenzy_damage");
+    private static final Identifier FRENZY_DMG_ID = FTBOceanMobs.id("frenzy_damage");
     private static final AttributeModifier FRENZY_DMG = new AttributeModifier(
             FRENZY_DMG_ID, 6.0f, AttributeModifier.Operation.ADD_VALUE
     );
     public static final TargetingConditions NOT_RIFT_MOBS = TargetingConditions.DEFAULT.copy()
-            .selector(e -> !e.getType().is(FTBOceanMobsTags.Entity.RIFT_MOBS));
+            .selector((e, level) -> !e.is(FTBOceanMobsTags.Entity.RIFT_MOBS));
 
     private static final float DAMAGE_CAP_ARMOR = 3f;
     private static final float DAMAGE_CAP_NO_ARMOR = 15f;
@@ -94,6 +103,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
+            Mth.createInsecureUUID(random),
             Component.translatable("entity.ftboceanmobs.rift_weaver"),
             BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.NOTCHED_12
     ).setDarkenScreen(true);
@@ -107,6 +117,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     private RiftWeaverMode currentMode = RiftWeaverModes.HOLD_POSITION;
     private RiftWeaverMode lastMode = RiftWeaverModes.HOLD_POSITION;
     private RiftWeaverMode queuedMode = null;  // next special mode to go into, only from hold/roam modes
+    private final Deque<RiftWeaverMode> phaseTransitions = new ArrayDeque<>();
     private BlockPos spawnPos = null;
     private int modeTicksRemaining = 0;
     BlockPos roamTarget;
@@ -171,7 +182,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         FlyingPathNavigation flyingpathnavigation = new FlyingPathNavigation(this, level);
         flyingpathnavigation.setCanOpenDoors(false);
         flyingpathnavigation.setCanFloat(true);
-        flyingpathnavigation.setCanPassDoors(true);
+        flyingpathnavigation.getNodeEvaluator().setCanPassDoors(true);
         return flyingpathnavigation;
     }
 
@@ -181,43 +192,77 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         this.targetSelector.addGoal(2, new RandomAttackableTargetGoal<>(this,
                 LivingEntity.class, 60,
                 true, false,
-                e -> !e.getType().is(FTBOceanMobsTags.Entity.RIFT_MOBS))
+                (e, level) -> !e.is(FTBOceanMobsTags.Entity.RIFT_MOBS))
         );
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compound) {
-        super.readAdditionalSaveData(compound);
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
         if (this.hasCustomName()) {
             this.bossEvent.setName(this.getDisplayName());
         }
-        fightPhase = compound.getInt("fightPhase");
-        currentMode = RiftWeaverModes.byNameElseHold(compound.getString("currentMode"));
+        fightPhase = input.getIntOr("fightPhase", 0);
+        currentMode = RiftWeaverModes.byNameElseHold(input.getStringOr("currentMode", ""));
         getEntityData().set(MODE, currentMode.getName());
-        lastMode = RiftWeaverModes.byNameElseHold(compound.getString("lastMode"));
-        queuedMode = compound.contains("queuedMode", Tag.TAG_STRING) ? RiftWeaverModes.byNameElseHold(compound.getString("queuedMode")) : null;
-        modeTicksRemaining = compound.getInt("modeCounter");
-        spawnPos = NbtUtils.readBlockPos(compound, "spawnPos").orElse(null);
-        armorDurability = compound.getFloat("armorDurability");
-        setArmorActive(compound.getBoolean("armorActive"));
-        setFrenzied(compound.getBoolean("frenzied"));
-        accumulatedDmg = compound.getFloat("accumulatedDmg");
+        lastMode = RiftWeaverModes.byNameElseHold(input.getStringOr("lastMode", ""));
+        queuedMode = input.getString("queuedMode").map(RiftWeaverModes::byNameElseHold).orElse(null);
+        modeTicksRemaining = input.getIntOr("modeCounter", 0);
+        spawnPos = input.read("spawnPos", BlockPos.CODEC).orElse(null);
+        armorDurability = input.getFloatOr("armorDurability", 0f);
+        setArmorActive(input.getBooleanOr("armorActive", false));
+        setFrenzied(input.getBooleanOr("frenzied", false));
+        accumulatedDmg = input.getFloatOr("accumulatedDmg", 0f);
+        phaseTransitions.clear();
+        var savedTransitions = input.read("phaseTransitions", Codec.STRING.listOf());
+        if (savedTransitions.isPresent()) {
+            savedTransitions.get().stream().map(RiftWeaverModes::byNameElseHold)
+                    .filter(mode -> mode == RiftWeaverModes.TIDAL_SURGE || mode == RiftWeaverModes.RIFTCLAW_FRENZY)
+                    .forEach(phaseTransitions::addLast);
+        } else {
+            // Recover phase transitions from saves made before the separate queue existed.
+            if (queuedMode == RiftWeaverModes.TIDAL_SURGE) {
+                phaseTransitions.addLast(queuedMode);
+                queuedMode = null;
+            }
+            if (fightPhase == 3 && !isFrenzied() && currentMode != RiftWeaverModes.RIFTCLAW_FRENZY) {
+                if (currentMode != RiftWeaverModes.TIDAL_SURGE && phaseTransitions.isEmpty()) {
+                    phaseTransitions.addLast(RiftWeaverModes.TIDAL_SURGE);
+                }
+                phaseTransitions.addLast(RiftWeaverModes.RIFTCLAW_FRENZY);
+            }
+        }
+        if (queuedMode == RiftWeaverModes.RIFTCLAW_FRENZY) queuedMode = null;
+        if (isFrenzied() || currentMode == RiftWeaverModes.RIFTCLAW_FRENZY) {
+            phaseTransitions.removeIf(mode -> mode == RiftWeaverModes.RIFTCLAW_FRENZY);
+        }
+        if (!lastMode.isIdleMode()) lastMode = RiftWeaverModes.HOLD_POSITION;
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag compound) {
-        super.addAdditionalSaveData(compound);
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
 
-        compound.putInt("fightPhase", fightPhase);
-        compound.putString("currentMode", currentMode.getName());
-        compound.putString("lastMode", lastMode.getName());
-        if (queuedMode != null) compound.putString("queuedMode", queuedMode.getName());
-        if (modeTicksRemaining != 0) compound.putInt("modeCounter", modeTicksRemaining);
-        if (spawnPos != null) compound.put("spawnPos", NbtUtils.writeBlockPos(spawnPos));
-        if (armorDurability > 0f) compound.putFloat("armorDurability", armorDurability);
-        if (isArmorActive()) compound.putBoolean("armorActive", true);
-        if (isFrenzied()) compound.putBoolean("frenzied", true);
-        if (accumulatedDmg > 0f) compound.putFloat("accumulatedDmg", accumulatedDmg);
+        output.putInt("fightPhase", fightPhase);
+        output.store("phaseTransitions", Codec.STRING.listOf(), phaseTransitions.stream().map(RiftWeaverMode::getName).toList());
+        output.putString("currentMode", currentMode.getName());
+        output.putString("lastMode", lastMode.getName());
+        if (queuedMode != null) output.putString("queuedMode", queuedMode.getName());
+        if (modeTicksRemaining != 0) output.putInt("modeCounter", modeTicksRemaining);
+        if (spawnPos != null) output.store("spawnPos", BlockPos.CODEC, spawnPos);
+        if (armorDurability > 0f) output.putFloat("armorDurability", armorDurability);
+        if (isArmorActive()) output.putBoolean("armorActive", true);
+        if (isFrenzied()) output.putBoolean("frenzied", true);
+        if (accumulatedDmg > 0f) output.putFloat("accumulatedDmg", accumulatedDmg);
+    }
+
+    @Override
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
+
+        if (!level().isClientSide() && spawnPos == null) {
+            spawnPos = blockPosition();
+        }
     }
 
     @Override
@@ -235,7 +280,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     protected void onFlap() {
         super.onFlap();
 
-        if (this.level().isClientSide && !this.isSilent()) {
+        if (this.level().isClientSide() && !this.isSilent()) {
             this.level().playLocalSound(this.getX(), this.getY(), this.getZ(),
                     SoundEvents.ENDER_DRAGON_FLAP,
                     this.getSoundSource(),
@@ -246,11 +291,16 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     }
 
     @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "Attacking", 10, this::animState));
+    public float getHeadTrackingWeight() {
+        return currentMode.isIdleMode() ? 1f : 0f;
     }
 
-    private PlayState animState(AnimationState<RiftWeaverBoss> state) {
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>("Attacking", 10, this::animState));
+    }
+
+    private PlayState animState(AnimationTest<RiftWeaverBoss> state) {
         RawAnimation animation = Objects.requireNonNullElseGet(
                 currentMode.getAnimation(),
                 () -> state.isMoving() ? DefaultAnimations.FLY : DefaultAnimations.IDLE
@@ -349,16 +399,16 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             double z = getBoundingBox().minZ + random.nextDouble() * getBoundingBox().getZsize();
             level().addParticle(ParticleTypes.EXPLOSION_EMITTER, x, y, z, 0.0, 0.0, 0.0);
         }
-        if (deathTime >= 40 && !level().isClientSide() && !isRemoved()) {
+        if (deathTime >= 40 && level() instanceof ServerLevel serverLevel && !isRemoved()) {
             this.remove(Entity.RemovalReason.KILLED);
             this.gameEvent(GameEvent.ENTITY_DIE);
             level().getEntities(this, new AABB(spawnPos).inflate(Config.arenaRadius), e -> e instanceof BaseRiftMob)
-                    .forEach(Entity::kill);
+                    .forEach(e -> e.kill(serverLevel));
         }
     }
 
     @Override
-    protected void customServerAiStep() {
+    protected void customServerAiStep(ServerLevel level) {
         if (fightPhase == -1) {
             playSound(ModSounds.RIFT_WEAVER_SUMMON.get());
             fightPhase = 0;
@@ -382,16 +432,16 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
 
         if (getEyePosition().y - 5 < level().getHeight(Heightmap.Types.WORLD_SURFACE, blockPosition().getX(), blockPosition().getZ())) {
             // boss sometimes clips too far into the ground
-            moveTo(position().x, position().y + 2, position().z);
+            snapTo(position().x, position().y + 2, position().z);
         }
 
-        if (!hasRestriction()) {
+        if (!hasHome()) {
             // spawnPos == null: newly spawned
             // non-null: loaded from NBT
             if (spawnPos == null) {
                 spawnPos = blockPosition();
             }
-            restrictTo(spawnPos, Config.arenaRadius);
+            setHomeTo(spawnPos, Config.arenaRadius);
         }
 
         if (modeTicksRemaining > 0) {
@@ -405,9 +455,14 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             shootFireball();
         }
 
-        if (queuedMode != null && currentMode.isIdleMode()) {
-            switchMode(queuedMode);
-            queuedMode = null;
+        if (currentMode.isIdleMode()) {
+            if (!phaseTransitions.isEmpty()) {
+                switchMode(phaseTransitions.removeFirst());
+            } else if (queuedMode != null) {
+                RiftWeaverMode nextMode = queuedMode;
+                queuedMode = null;
+                switchMode(nextMode);
+            }
         }
 
         if (getTarget() != null && getTarget().isAlive()) {
@@ -422,10 +477,6 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             } else if (tickCount >= nextMeleeSlash) {
                 queueMode(RiftWeaverModes.MELEE_SLASH);
             }
-        }
-
-        if (fightPhase == 3 && !isFrenzied()) {
-            forceQueueMode(RiftWeaverModes.RIFTCLAW_FRENZY);
         }
 
         if (armorDurability > 0) {
@@ -455,8 +506,8 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     }
 
     @Override
-    protected AABB makeBoundingBox() {
-        return super.makeBoundingBox().move(0.0, 3.0, 0.0);
+    protected AABB makeBoundingBox(Vec3 position) {
+        return super.makeBoundingBox(position).move(0.0, 3.0, 0.0);
     }
 
     @Override
@@ -469,18 +520,17 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     }
 
     @Override
-    public boolean hurt(DamageSource source, float amount) {
+    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
         if (!source.is(Tags.DamageTypes.IS_TECHNICAL)) {
             amount = Math.min(amount, isArmorActive() && !source.is(Tags.DamageTypes.IS_MAGIC) ? DAMAGE_CAP_ARMOR : DAMAGE_CAP_NO_ARMOR);
         }
-        return super.hurt(source, amount);
+        return super.hurtServer(level, source, amount);
     }
 
     @Override
-    protected void actuallyHurt(DamageSource damageSource, float damageAmount) {
+    protected void actuallyHurt(ServerLevel level, DamageSource damageSource, float damageAmount) {
         float prevHealth = getHealth();
-        float prevHealthPct = getHealth() / getMaxHealth();
-        super.actuallyHurt(damageSource, damageAmount);
+        super.actuallyHurt(level, damageSource, damageAmount);
         float newHealthPct = getHealth() / getMaxHealth();
 
         if (armorDurability > 0f) {
@@ -491,12 +541,10 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
             }
         }
 
-        if (prevHealthPct >= 0.75f && newHealthPct < 0.75f) {
-            advanceFightPhase(1);
-        } else if (prevHealthPct >= 0.5f && newHealthPct < 0.5f) {
-            advanceFightPhase(2);
-        } else if (prevHealthPct >= 0.25f && newHealthPct < 0.25f) {
-            advanceFightPhase(3);
+        if (isAlive()) {
+            if (newHealthPct < 0.25f) advanceFightPhase(3);
+            else if (newHealthPct < 0.5f) advanceFightPhase(2);
+            else if (newHealthPct < 0.75f) advanceFightPhase(1);
         }
 
         accumulatedDmg += damageAmount;
@@ -514,8 +562,11 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
 
     private void advanceFightPhase(int phase) {
         if (fightPhase < phase) {
+            for (int nextPhase = Math.max(1, fightPhase + 1); nextPhase <= phase; nextPhase++) {
+                phaseTransitions.addLast(RiftWeaverModes.TIDAL_SURGE);
+                if (nextPhase == 3) phaseTransitions.addLast(RiftWeaverModes.RIFTCLAW_FRENZY);
+            }
             fightPhase = phase;
-            forceQueueMode(RiftWeaverModes.TIDAL_SURGE);
             armorDurability = 20f;
             if (getHealth() > 0f) {
                 setArmorActive(true);
@@ -536,7 +587,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     public void switchMode(RiftWeaverMode newMode) {
         if (newMode != currentMode) {
             currentMode.onModeEnd(this);
-            lastMode = currentMode;
+            if (currentMode.isIdleMode()) lastMode = currentMode;
             currentMode = newMode;
             modeTicksRemaining = newMode.durationTicks();
             entityData.set(MODE, currentMode.getName());
@@ -564,7 +615,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
 
     public void setArmorActive(boolean active) {
         getEntityData().set(HAS_ARMOR, active);
-        playSound(active ? SoundEvents.ARMOR_EQUIP_NETHERITE.value() : SoundEvents.SHIELD_BREAK, 5f, 1f);
+        playSound(active ? SoundEvents.ARMOR_EQUIP_NETHERITE.value() : SoundEvents.SHIELD_BREAK.value(), 5f, 1f);
     }
 
     public boolean isArmorActive() {
@@ -585,8 +636,11 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
     }
 
     int countPlayersInArena() {
+        if (!(level() instanceof ServerLevel serverLevel)) {
+            return 0;
+        }
         AABB aabb = new AABB(blockPosition()).inflate(Config.arenaRadius);
-        return (int) level().getNearbyPlayers(TargetingConditions.forNonCombat(), this, aabb).stream()
+        return (int) serverLevel.getNearbyPlayers(TargetingConditions.forNonCombat(), this, aabb).stream()
                 .filter(this::isInArena)
                 .count();
     }
@@ -608,7 +662,9 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         @SubscribeEvent
         public static void onProjectileImpact(ProjectileImpactEvent event) {
             // prevents the boss fireballing itself
-            if (event.getEntity() instanceof RiftWeaverBoss && event.getProjectile().getOwner() == event.getEntity()) {
+            if (event.getProjectile().getOwner() instanceof RiftWeaverBoss boss
+                    && event.getRayTraceResult() instanceof EntityHitResult hit
+                    && (hit.getEntity() == boss || hit.getEntity() instanceof RiftWeaverPart part && part.getParent() == boss)) {
                 event.setCanceled(true);
             }
         }
@@ -625,7 +681,7 @@ public class RiftWeaverBoss extends Monster implements GeoEntity {
         public static void onEntityJoin(EntityJoinLevelEvent event) {
             if (event.getEntity() instanceof AreaEffectCloud cloud && cloud.getOwner() instanceof RiftWeaverBoss) {
                 cloud.setDuration(200);
-                cloud.setParticle(ParticleTypes.SOUL_FIRE_FLAME);
+                cloud.setCustomParticle(ParticleTypes.SOUL_FIRE_FLAME);
             }
         }
     }

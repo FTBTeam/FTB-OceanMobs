@@ -1,14 +1,27 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.RawAnimation;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
 import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import dev.ftb.mods.ftboceanmobs.mobai.MeleeAttackTiming;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
@@ -23,14 +36,13 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
+import net.neoforged.neoforge.common.CommonHooks;
+import net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent;
 
 import java.util.EnumSet;
 import java.util.function.Function;
@@ -64,7 +76,7 @@ public class RiftDemon extends BaseRiftMob {
     protected void registerGoals() {
         goalSelector.addGoal(1, new ShieldsUpGoal(this));
         goalSelector.addGoal(1, new GlareGoal(this));
-        goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.3, false, 18));
+        goalSelector.addGoal(2, new DelayedMeleeAttackGoal(this, 1.3, false, MeleeAttackTiming.DEMON));
 
         goalSelector.addGoal(7, new RandomStrollGoal(this, 1.0));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -77,8 +89,8 @@ public class RiftDemon extends BaseRiftMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(DefaultAnimations.genericWalkIdleController(this));
-        controllers.add(new AnimationController<>(this, "Attacking", 10, this::attackState));
+        controllers.add(DefaultAnimations.genericWalkIdleController());
+        controllers.add(new AnimationController<>("Attacking", MeleeAttackTiming.TRANSITION_TICKS, this::attackState));
     }
 
     @Override
@@ -94,19 +106,50 @@ public class RiftDemon extends BaseRiftMob {
     }
 
     @Override
-    protected void blockUsingShield(LivingEntity attacker) {
-        attacker.hurt(level().damageSources().hotFloor(), 8f);
-        attacker.igniteForTicks(30);
-        playSound(SoundEvents.SHIELD_BLOCK, 1f, 1f);
+    public float applyItemBlocking(ServerLevel level, DamageSource source, float damage) {
+        if (!isShieldUp() || damage <= 0f || damageContainers == null || damageContainers.isEmpty()) {
+            return super.applyItemBlocking(level, source, damage);
+        }
+        if (source.getDirectEntity() instanceof AbstractArrow arrow && arrow.getPierceLevel() > 0) {
+            return 0f;
+        }
+        Vec3 sourcePos = source.getSourcePosition();
+        if (sourcePos == null) {
+            return 0f;
+        }
+        Vec3 viewVec = calculateViewVector(0.0F, getYHeadRot());
+        Vec3 offset = sourcePos.vectorTo(position());
+        offset = new Vec3(offset.x, 0.0, offset.z).normalize();
+        if (offset.dot(viewVec) >= 0.0) {
+            return 0f;
+        }
+
+        LivingShieldBlockEvent ev = CommonHooks.onDamageBlock(this, damageContainers.peek(), damage, true);
+        if (!ev.getBlocked()) {
+            return 0f;
+        }
+        damageContainers.peek().setBlockedDamage(ev);
+        if (!source.is(DamageTypeTags.IS_PROJECTILE) && source.getDirectEntity() instanceof LivingEntity attacker) {
+            blockUsingItem(level, attacker);
+        }
+        return ev.getBlockedDamage();
     }
 
-    private PlayState attackState(AnimationState<RiftDemon> state) {
+    @Override
+    protected void blockUsingItem(ServerLevel level, LivingEntity attacker) {
+        attacker.hurtServer(level, level.damageSources().hotFloor(), 8f);
+        attacker.igniteForTicks(30);
+        playSound(SoundEvents.SHIELD_BLOCK.value(), 1f, 1f);
+    }
+
+    private PlayState attackState(AnimationTest<RiftDemon> state) {
         state.setControllerSpeed(1f);
         if (isShieldUp()) {
             return state.setAndContinue(DefaultAnimations.ATTACK_BLOCK);
         } else if (isGlaring()) {
             return state.setAndContinue(ANIM_ATTACK_GLARE);
         } else if (swinging) {
+            state.setControllerSpeed(MeleeAttackTiming.DEMON.animationSpeed());
             return state.setAndContinue(DefaultAnimations.ATTACK_STRIKE);
         }
         return PlayState.STOP;
@@ -133,14 +176,19 @@ public class RiftDemon extends BaseRiftMob {
     }
 
     @Override
+    public float getHeadTrackingWeight() {
+        return isShieldUp() || isGlaring() ? 0f : super.getHeadTrackingWeight();
+    }
+
+    @Override
     public int getCurrentSwingDuration() {
-        return 30;
+        return MeleeAttackTiming.DEMON.durationTicks();
     };
 
     @Override
-    protected AABB getAttackBoundingBox() {
+    protected AABB getAttackBoundingBox(double horizontalExpansion) {
         // long arms...
-        return super.getAttackBoundingBox().inflate(2.0);
+        return super.getAttackBoundingBox(horizontalExpansion).inflate(2.0);
     }
 
     @Override
@@ -149,8 +197,8 @@ public class RiftDemon extends BaseRiftMob {
     }
 
     @Override
-    public boolean doHurtTarget(Entity entity) {
-        if (super.doHurtTarget(entity)) {
+    public boolean doHurtTarget(ServerLevel level, Entity entity) {
+        if (super.doHurtTarget(level, entity)) {
             entity.igniteForSeconds(4);
             return true;
         }
@@ -292,9 +340,9 @@ public class RiftDemon extends BaseRiftMob {
         }
 
         private void addLightning(LivingEntity entity, boolean visual, Vec3 offset) {
-            LightningBolt lightningbolt = EntityType.LIGHTNING_BOLT.create(entity.level());
+            LightningBolt lightningbolt = EntityType.LIGHTNING_BOLT.create(entity.level(), EntitySpawnReason.TRIGGERED);
             if (lightningbolt != null) {
-                lightningbolt.moveTo(Vec3.atBottomCenterOf(entity.blockPosition()).add(offset));
+                lightningbolt.snapTo(Vec3.atBottomCenterOf(entity.blockPosition()).add(offset));
                 lightningbolt.setVisualOnly(visual);
                 entity.level().addFreshEntity(lightningbolt);
             }

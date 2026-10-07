@@ -4,9 +4,11 @@ import dev.ftb.mods.ftboceanmobs.FTBOceanMobsTags;
 import dev.ftb.mods.ftboceanmobs.registry.ModMobEffects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.PowerParticleOption;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -35,15 +37,15 @@ public class EnergyGeyserBlock extends Block {
         Vec3 vec = Vec3.atBottomCenterOf(pos.above());
         if (level.getBlockState(pos.above()).getBlock() instanceof LiquidBlock) {
             level.addParticle(ParticleTypes.BUBBLE_COLUMN_UP, vec.x + random.nextFloat() * 0.5f - 0.25f, vec.y, vec.z + random.nextFloat() * 0.5f - 0.25f, 0f, 0.05f, 0f);
-            level.addParticle(ParticleTypes.DRAGON_BREATH, vec.x + random.nextFloat() * 0.5f - 0.25f, vec.y + 1, vec.z + random.nextFloat() * 0.5f - 0.25f, 0f, 0.05f, 0f);
+            level.addParticle(PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0F), vec.x + random.nextFloat() * 0.5f - 0.25f, vec.y + 1, vec.z + random.nextFloat() * 0.5f - 0.25f, 0f, 0.05f, 0f);
         } else {
-            level.addParticle(ParticleTypes.DRAGON_BREATH, vec.x + random.nextFloat() * 0.5f - 0.25f, vec.y, vec.z + random.nextFloat() * 0.5f - 0.25f, 0f, 0.05f, 0f);
+            level.addParticle(PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0F), vec.x + random.nextFloat() * 0.5f - 0.25f, vec.y, vec.z + random.nextFloat() * 0.5f - 0.25f, 0f, 0.05f, 0f);
         }
     }
 
     @Override
-    protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-        if (entity instanceof LivingEntity livingEntity && !entity.getType().is(FTBOceanMobsTags.Entity.RIFT_MOBS)) {
+    protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise) {
+        if (entity instanceof LivingEntity livingEntity && !entity.is(FTBOceanMobsTags.Entity.RIFT_MOBS)) {
             livingEntity.addEffect(new MobEffectInstance(ModMobEffects.DROWNING_SHADOWS_EFFECT, 60, 1));
         }
     }

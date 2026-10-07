@@ -1,6 +1,15 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.RawAnimation;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
 import dev.ftb.mods.ftboceanmobs.mobai.DelayedMeleeAttackGoal;
+import dev.ftb.mods.ftboceanmobs.mobai.MeleeAttackTiming;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ColorParticleOption;
@@ -8,6 +17,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
@@ -30,10 +40,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class CorrosiveCraig extends BaseRiftMob {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -82,14 +88,19 @@ public class CorrosiveCraig extends BaseRiftMob {
     }
 
     @Override
-    public int getCurrentSwingDuration() {
-        return 25;
+    public float getHeadTrackingWeight() {
+        return regenTimer > 0 ? 0f : super.getHeadTrackingWeight();
     }
 
     @Override
-    protected AABB getAttackBoundingBox() {
+    public int getCurrentSwingDuration() {
+        return MeleeAttackTiming.CRAIG.durationTicks();
+    }
+
+    @Override
+    protected AABB getAttackBoundingBox(double horizontalExpansion) {
         // long arms...
-        return super.getAttackBoundingBox().inflate(1.9);
+        return super.getAttackBoundingBox(horizontalExpansion).inflate(1.9);
     }
 
     @Override
@@ -100,7 +111,7 @@ public class CorrosiveCraig extends BaseRiftMob {
             regenTimer--;
         }
 
-        if (regenTimer == 30 && level().isClientSide) {
+        if (regenTimer == 30 && level().isClientSide()) {
             RandomSource rnd = getRandom();
             for (int i = 0; i < 50; i++) {
                 Vec3 pos = getEyePosition().add(rnd.nextDouble() - 0.5, rnd.nextDouble() + 0.5, rnd.nextDouble() - 0.5);
@@ -111,11 +122,15 @@ public class CorrosiveCraig extends BaseRiftMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "Walk/Idle", 10, this::walkIdleRegenState));
-        controllers.add(DefaultAnimations.genericAttackAnimation(this, DefaultAnimations.ATTACK_STRIKE));
+        controllers.add(new AnimationController<>("Walk/Idle", 10, this::walkIdleRegenState));
+        controllers.add(new AnimationController<CorrosiveCraig>("Attack", MeleeAttackTiming.TRANSITION_TICKS, test -> {
+            test.setControllerSpeed(MeleeAttackTiming.CRAIG.animationSpeed());
+            return regenTimer == 0 && swinging ? test.setAndContinue(DefaultAnimations.ATTACK_STRIKE) : PlayState.STOP;
+        }));
     }
 
-    private PlayState walkIdleRegenState(AnimationState<CorrosiveCraig> state) {
+    private PlayState walkIdleRegenState(AnimationTest<CorrosiveCraig> state) {
+        state.setControllerSpeed(1f);
         if (regenTimer == 0) {
             if (state.isMoving()) {
                 state.setAnimation(DefaultAnimations.WALK);
@@ -153,8 +168,8 @@ public class CorrosiveCraig extends BaseRiftMob {
     }
 
     @Override
-    public boolean doHurtTarget(Entity entity) {
-        if (super.doHurtTarget(entity)) {
+    public boolean doHurtTarget(ServerLevel level, Entity entity) {
+        if (super.doHurtTarget(level, entity)) {
             if (entityData.get(FIRE_FIST)) {
                 entity.igniteForTicks(40 + entity.getRandom().nextInt(40));
             }
@@ -189,7 +204,7 @@ public class CorrosiveCraig extends BaseRiftMob {
 
     class CraigAttackGoal extends DelayedMeleeAttackGoal {
         public CraigAttackGoal(CorrosiveCraig mob, double speedModifier, boolean followingTargetEvenIfNotSeen) {
-            super(mob, speedModifier, followingTargetEvenIfNotSeen, 20);
+            super(mob, speedModifier, followingTargetEvenIfNotSeen, MeleeAttackTiming.CRAIG);
         }
 
         @Override

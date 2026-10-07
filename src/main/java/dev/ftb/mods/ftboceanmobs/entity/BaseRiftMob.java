@@ -1,8 +1,9 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.GeoEntity;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
@@ -13,9 +14,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.Vec3;
-import software.bernie.geckolib.animatable.GeoEntity;
 
-public abstract class BaseRiftMob extends Monster implements GeoEntity {
+public abstract class BaseRiftMob extends Monster implements GeoEntity, AnimatedHeadTracking {
     protected BaseRiftMob(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
 
@@ -35,7 +35,7 @@ public abstract class BaseRiftMob extends Monster implements GeoEntity {
     }
 
     @Override
-    public boolean checkSpawnRules(LevelAccessor level, MobSpawnType spawnReason) {
+    public boolean checkSpawnRules(LevelAccessor level, EntitySpawnReason spawnReason) {
         // rift mobs don't care about light levels for spawning purposes
         return true;
     }
@@ -46,6 +46,11 @@ public abstract class BaseRiftMob extends Monster implements GeoEntity {
     }
 
     public void playDelayedAttackSound() {
+    }
+
+    @Override
+    public float getHeadTrackingWeight() {
+        return swinging ? 0f : 1f;
     }
 
     static class RiftMobMoveControl extends MoveControl {

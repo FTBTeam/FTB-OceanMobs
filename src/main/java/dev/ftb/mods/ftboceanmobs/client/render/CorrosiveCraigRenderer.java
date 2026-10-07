@@ -1,24 +1,28 @@
 package dev.ftb.mods.ftboceanmobs.client.render;
 
+import com.geckolib.cache.model.GeoBone;
+import com.geckolib.renderer.base.GeoRenderer;
+import com.geckolib.renderer.layer.builtin.BlockAndItemGeoLayer;
+import com.geckolib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ftb.mods.ftboceanmobs.client.model.CorrosiveCraigModel;
 import dev.ftb.mods.ftboceanmobs.entity.CorrosiveCraig;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.block.BlockModelRenderState;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.renderer.GeoEntityRenderer;
-import software.bernie.geckolib.renderer.layer.BlockAndItemGeoLayer;
 
-public class CorrosiveCraigRenderer extends GeoEntityRenderer<CorrosiveCraig> {
+import java.util.List;
+
+public class CorrosiveCraigRenderer extends HeadTurningGeoRenderer<CorrosiveCraig> {
     private static final String RIGHT_HAND = "bone6";
 
     public CorrosiveCraigRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new CorrosiveCraigModel());
 
-        addRenderLayer(new FlameLayer());
+        withRenderLayer(new FlameLayer(renderManager, this));
     }
 
     @Override
@@ -31,21 +35,30 @@ public class CorrosiveCraigRenderer extends GeoEntityRenderer<CorrosiveCraig> {
         return (CorrosiveCraigRenderer) new CorrosiveCraigRenderer(renderManager).withScale(scale);
     }
 
-    private class FlameLayer extends BlockAndItemGeoLayer<CorrosiveCraig> {
-        public FlameLayer() {
-            super(CorrosiveCraigRenderer.this);
+    private static class FlameLayer extends BlockAndItemGeoLayer<CorrosiveCraig, Void, LivingEntityRenderState> {
+        public FlameLayer(EntityRendererProvider.Context context, GeoRenderer<CorrosiveCraig, Void, LivingEntityRenderState> renderer) {
+            super(context, renderer);
         }
 
         @Override
-        protected @Nullable BlockState getBlockForBone(GeoBone bone, CorrosiveCraig animatable) {
-            return animatable.swinging && animatable.getEntityData().get(CorrosiveCraig.FIRE_FIST) && bone.getName().equals(RIGHT_HAND) ?
-                    Blocks.FIRE.defaultBlockState() : null;
+        protected List<RenderData> getRelevantBones(CorrosiveCraig animatable, @Nullable Void relatedObject, LivingEntityRenderState renderState, float partialTick) {
+            return animatable.swinging && animatable.getEntityData().get(CorrosiveCraig.FIRE_FIST) ?
+                    List.of(RenderData.block(RIGHT_HAND, RenderUtil.createRenderStateForBlock(Blocks.FIRE.defaultBlockState(), blockModelResolver))) :
+                    List.of();
         }
 
         @Override
-        protected void renderBlockForBone(PoseStack poseStack, GeoBone bone, BlockState state, CorrosiveCraig animatable, MultiBufferSource bufferSource, float partialTick, int packedLight, int packedOverlay) {
+        public void addRenderData(CorrosiveCraig animatable, @Nullable Void relatedObject, LivingEntityRenderState renderState, float partialTick) {
+            List<RenderData> contents = getRelevantBones(animatable, relatedObject, renderState, partialTick);
+            if (!contents.isEmpty()) {
+                renderState.addGeckolibData(CONTENTS, contents);
+            }
+        }
+
+        @Override
+        protected void submitBlockRender(PoseStack poseStack, GeoBone bone, BlockModelRenderState blockState, LivingEntityRenderState renderState, SubmitNodeCollector renderTasks, int packedLight) {
             poseStack.scale(2.5f, 2.5f, 2.5f);
-            super.renderBlockForBone(poseStack, bone, state, animatable, bufferSource, partialTick, packedLight, packedOverlay);
+            super.submitBlockRender(poseStack, bone, blockState, renderState, renderTasks, packedLight);
         }
     }
 }

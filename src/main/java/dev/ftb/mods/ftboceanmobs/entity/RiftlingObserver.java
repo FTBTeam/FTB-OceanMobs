@@ -1,11 +1,20 @@
 package dev.ftb.mods.ftboceanmobs.entity;
 
+import com.geckolib.animatable.instance.AnimatableInstanceCache;
+import com.geckolib.animatable.manager.AnimatableManager;
+import com.geckolib.animation.AnimationController;
+import com.geckolib.animation.RawAnimation;
+import com.geckolib.animation.object.PlayState;
+import com.geckolib.animation.state.AnimationTest;
+import com.geckolib.constant.DefaultAnimations;
+import com.geckolib.util.GeckoLibUtil;
 import dev.ftb.mods.ftboceanmobs.registry.ModSounds;
 import dev.ftb.mods.ftboceanmobs.util.MiscUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -24,19 +33,15 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.ThrownPotion;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThrownPotion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.constant.DefaultAnimations;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
-import javax.annotation.Nullable;
 import java.util.EnumSet;
+import javax.annotation.Nullable;
 
 public class RiftlingObserver extends BaseRiftMob {
     public static final double GAZE_MIN_ANGLE = 0.4;
@@ -96,7 +101,7 @@ public class RiftlingObserver extends BaseRiftMob {
     public void aiStep() {
         super.aiStep();
 
-        if (level().isClientSide) {
+        if (level().isClientSide()) {
             if (isGazeWarmingUp() && clientSideGazeWarmupTime < ObserverGazeAttackGoal.TOTAL_TIME) {
                 clientSideGazeWarmupTime++;
             }
@@ -135,19 +140,19 @@ public class RiftlingObserver extends BaseRiftMob {
     }
 
     @Override
-    public boolean hurt(DamageSource source, float amount) {
-        if (this.isInvulnerableTo(source)) {
+    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+        if (this.isInvulnerableTo(level, source)) {
             return false;
         } else if (source.is(Tags.DamageTypes.IS_TECHNICAL)) {
-            return super.hurt(source, amount);
+            return super.hurtServer(level, source, amount);
         } else {
-            boolean potion = source.getDirectEntity() instanceof ThrownPotion;
+            boolean potion = source.getDirectEntity() instanceof AbstractThrownPotion;
             if (!source.is(DamageTypeTags.IS_PROJECTILE) && !potion) {
-                if (!this.level().isClientSide() && this.random.nextInt(3) == 0) {
+                if (this.random.nextInt(3) == 0) {
                     this.teleport();
                     return false;
                 }
-                return super.hurt(source, amount);
+                return super.hurtServer(level, source, amount);
             } else {
                 for (int i = 0; i < 64; i++) {
                     if (this.teleport()) {
@@ -172,7 +177,7 @@ public class RiftlingObserver extends BaseRiftMob {
         if (level().hasChunkAt(blockpos)) {
             boolean foundValidBlock = false;
 
-            while (!foundValidBlock && blockpos.getY() > level().getMinBuildHeight()) {
+            while (!foundValidBlock && blockpos.getY() > level().getMinY()) {
                 BlockPos blockpos1 = blockpos.below();
                 BlockState blockstate = level().getBlockState(blockpos1);
                 if (blockstate.blocksMotion() || blockstate.getBlock() instanceof LiquidBlock) {
@@ -241,7 +246,7 @@ public class RiftlingObserver extends BaseRiftMob {
     public LivingEntity getSyncedGazeTarget() {
         if (!this.hasSyncedGazeTarget()) {
             return null;
-        } else if (this.level().isClientSide) {
+        } else if (this.level().isClientSide()) {
             if (this.clientSideCachedAttackTarget != null) {
                 return this.clientSideCachedAttackTarget;
             } else {
@@ -260,10 +265,10 @@ public class RiftlingObserver extends BaseRiftMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(DefaultAnimations.genericWalkIdleController(this));
-        controllers.add(DefaultAnimations.genericAttackAnimation(this, ATTACK_GAZE));
-        controllers.add(new AnimationController<>(this, "Teleport", 32, this::teleportAnimationState));
-        controllers.add(new AnimationController<>(this, "Gaze", 32, this::gazeAnimationState));
+        controllers.add(DefaultAnimations.genericWalkIdleController());
+        controllers.add(new AnimationController<RiftlingObserver>("Attack", 5, test -> swinging ? test.setAndContinue(ATTACK_GAZE) : PlayState.STOP));
+        controllers.add(new AnimationController<>("Teleport", 32, this::teleportAnimationState));
+        controllers.add(new AnimationController<>("Gaze", 32, this::gazeAnimationState));
     }
 
     @Override
@@ -284,7 +289,7 @@ public class RiftlingObserver extends BaseRiftMob {
         return clientSideGazeWarmupTime;
     }
 
-    private PlayState teleportAnimationState(AnimationState<RiftlingObserver> state) {
+    private PlayState teleportAnimationState(AnimationTest<RiftlingObserver> state) {
         if (isTeleporting()) {
             state.setAnimation(TELEPORT_ANIMATION);
             return PlayState.CONTINUE;
@@ -293,7 +298,7 @@ public class RiftlingObserver extends BaseRiftMob {
         }
     }
 
-    private PlayState gazeAnimationState(AnimationState<RiftlingObserver> state) {
+    private PlayState gazeAnimationState(AnimationTest<RiftlingObserver> state) {
         if (isGazeWarmingUp()) {
             state.setAnimation(ATTACK_GAZE);
             return PlayState.CONTINUE;
@@ -361,8 +366,8 @@ public class RiftlingObserver extends BaseRiftMob {
 
                 if (target != null && target.isAlive() && MiscUtil.isLookingAtMe(observer, target, GAZE_MIN_ANGLE)) {
                     observer.level().playSound(null, target.blockPosition(), SoundEvents.EVOKER_CAST_SPELL, SoundSource.HOSTILE, 1f, 1f);
-                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 3));
-                    target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 150, 10));
+                    target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 60, 3));
+                    target.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 150, 10));
                 }
             }
         }
